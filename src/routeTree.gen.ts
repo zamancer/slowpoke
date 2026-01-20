@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as FlashcardsIndexRouteImport } from './routes/flashcards/index'
+import { Route as FlashcardsGroupIdRouteImport } from './routes/flashcards/$groupId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FlashcardsIndexRoute = FlashcardsIndexRouteImport.update({
+  id: '/flashcards/',
+  path: '/flashcards/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlashcardsGroupIdRoute = FlashcardsGroupIdRouteImport.update({
+  id: '/flashcards/$groupId',
+  path: '/flashcards/$groupId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/flashcards/$groupId': typeof FlashcardsGroupIdRoute
+  '/flashcards/': typeof FlashcardsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/flashcards/$groupId': typeof FlashcardsGroupIdRoute
+  '/flashcards': typeof FlashcardsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/flashcards/$groupId': typeof FlashcardsGroupIdRoute
+  '/flashcards/': typeof FlashcardsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/flashcards/$groupId' | '/flashcards/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/flashcards/$groupId' | '/flashcards'
+  id: '__root__' | '/' | '/flashcards/$groupId' | '/flashcards/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  FlashcardsGroupIdRoute: typeof FlashcardsGroupIdRoute
+  FlashcardsIndexRoute: typeof FlashcardsIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/flashcards/': {
+      id: '/flashcards/'
+      path: '/flashcards'
+      fullPath: '/flashcards/'
+      preLoaderRoute: typeof FlashcardsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flashcards/$groupId': {
+      id: '/flashcards/$groupId'
+      path: '/flashcards/$groupId'
+      fullPath: '/flashcards/$groupId'
+      preLoaderRoute: typeof FlashcardsGroupIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  FlashcardsGroupIdRoute: FlashcardsGroupIdRoute,
+  FlashcardsIndexRoute: FlashcardsIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
