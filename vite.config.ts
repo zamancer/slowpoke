@@ -1,4 +1,5 @@
 import { fileURLToPath, URL } from 'node:url'
+import contentCollections from '@content-collections/vite'
 import netlify from '@netlify/vite-plugin-tanstack-start'
 import tailwindcss from '@tailwindcss/vite'
 import { devtools } from '@tanstack/devtools-vite'
@@ -14,6 +15,7 @@ const config = defineConfig({
 		},
 	},
 	plugins: [
+		contentCollections(),
 		devtools(),
 		netlify(),
 		// this is the plugin that enables path aliases

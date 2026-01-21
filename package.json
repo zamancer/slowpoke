@@ -21,6 +21,8 @@
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.49.0",
+    "@content-collections/core": "^0.13.1",
+    "@content-collections/vite": "^0.2.8",
     "@convex-dev/react-query": "0.1.0",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-select": "^2.2.6",

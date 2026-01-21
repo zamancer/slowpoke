@@ -1,21 +1,15 @@
+import { allFlashcardGroups } from 'content-collections'
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
-import { createServerFn } from '@tanstack/react-start'
 import { FlashcardGrid } from '@/components/flashcard/FlashcardGrid'
-import { loadFlashcardGroupById } from '@/lib/common/flashcard-common-loader'
 
-const getFlashcardGroup = createServerFn({ method: 'GET' }).handler(
-	async (ctx) => {
-		const groupId = (ctx as { data: string }).data
-		const group = await loadFlashcardGroupById(groupId)
+export const Route = createFileRoute('/flashcards/$groupId')({
+	loader: ({ params }) => {
+		const group = allFlashcardGroups.find((g) => g.id === params.groupId)
 		if (!group) {
 			throw notFound()
 		}
 		return group
 	},
-)
-
-export const Route = createFileRoute('/flashcards/$groupId')({
-	loader: ({ params }) => getFlashcardGroup({ data: params.groupId }),
 	component: FlashcardGroupPage,
 	notFoundComponent: NotFoundPage,
 })
