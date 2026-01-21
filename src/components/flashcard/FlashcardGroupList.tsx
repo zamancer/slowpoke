@@ -1,6 +1,5 @@
+import type { FlashcardGroup } from 'content-collections'
 import { Link } from '@tanstack/react-router'
-import { getGroupTitle } from '@/lib/common/flashcard-common-fns'
-import type { FlashcardGroup } from '@/lib/common/flashcard-common-types'
 import { cn } from '@/lib/utils'
 
 interface FlashcardGroupListProps {
@@ -25,52 +24,48 @@ export const FlashcardGroupList = ({ groups }: FlashcardGroupListProps) => {
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-				{groups.map((group) => {
-					const title = getGroupTitle(group)
+				{groups.map((group) => (
+					<Link
+						key={group.id}
+						to="/flashcards/$groupId"
+						params={{ groupId: group.id }}
+						className={cn(
+							'flex flex-col gap-3 p-5 rounded-lg border border-border',
+							'bg-card hover:shadow-md hover:border-primary/30 transition-all',
+						)}
+					>
+						<div className="flex items-start justify-between gap-2">
+							<h2 className="text-lg font-semibold">{group.title}</h2>
+							<span
+								className={cn(
+									'px-2 py-0.5 rounded-full text-xs font-medium capitalize',
+									difficultyColors[group.difficulty],
+								)}
+							>
+								{group.difficulty}
+							</span>
+						</div>
 
-					return (
-						<Link
-							key={group.id}
-							to="/flashcards/$groupId"
-							params={{ groupId: group.id }}
-							className={cn(
-								'flex flex-col gap-3 p-5 rounded-lg border border-border',
-								'bg-card hover:shadow-md hover:border-primary/30 transition-all',
-							)}
-						>
-							<div className="flex items-start justify-between gap-2">
-								<h2 className="text-lg font-semibold">{title}</h2>
+						<div className="flex items-center gap-2 text-sm text-muted-foreground">
+							<span>{group.cards.length} cards</span>
+							<span>·</span>
+							<span className="capitalize">
+								{group.category.replace('-', ' ')}
+							</span>
+						</div>
+
+						<div className="flex flex-wrap gap-1">
+							{group.tags.map((tag) => (
 								<span
-									className={cn(
-										'px-2 py-0.5 rounded-full text-xs font-medium capitalize',
-										difficultyColors[group.difficulty],
-									)}
+									key={tag}
+									className="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-xs"
 								>
-									{group.difficulty}
+									{tag}
 								</span>
-							</div>
-
-							<div className="flex items-center gap-2 text-sm text-muted-foreground">
-								<span>{group.cards.length} cards</span>
-								<span>·</span>
-								<span className="capitalize">
-									{group.category.replace('-', ' ')}
-								</span>
-							</div>
-
-							<div className="flex flex-wrap gap-1">
-								{group.tags.map((tag) => (
-									<span
-										key={tag}
-										className="px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground text-xs"
-									>
-										{tag}
-									</span>
-								))}
-							</div>
-						</Link>
-					)
-				})}
+							))}
+						</div>
+					</Link>
+				))}
 			</div>
 		</div>
 	)

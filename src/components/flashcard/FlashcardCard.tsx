@@ -1,11 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import type { Flashcard } from '@/lib/common/flashcard-common-types'
 import { cn } from '@/lib/utils'
 
+interface Card {
+	front: string
+	back: string
+}
+
 interface FlashcardCardProps {
-	card: Flashcard
+	card: Card
 	index: number
 }
 

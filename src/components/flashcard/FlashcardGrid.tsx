@@ -1,5 +1,4 @@
-import { getGroupTitle } from '@/lib/common/flashcard-common-fns'
-import type { FlashcardGroup } from '@/lib/common/flashcard-common-types'
+import type { FlashcardGroup } from 'content-collections'
 import { FlashcardCard } from './FlashcardCard'
 
 interface FlashcardGridProps {
@@ -7,12 +6,10 @@ interface FlashcardGridProps {
 }
 
 export const FlashcardGrid = ({ group }: FlashcardGridProps) => {
-	const title = getGroupTitle(group)
-
 	return (
 		<div className="flex flex-col gap-6">
 			<div className="flex flex-col gap-2">
-				<h1 className="text-2xl font-bold">{title}</h1>
+				<h1 className="text-2xl font-bold">{group.title}</h1>
 				<div className="flex items-center gap-2 text-sm text-muted-foreground">
 					<span className="capitalize">{group.difficulty}</span>
 					<span>·</span>
