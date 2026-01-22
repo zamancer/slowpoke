@@ -13,7 +13,7 @@ export const QuizProgress = ({
 	correct,
 	answered,
 }: QuizProgressProps) => {
-	const progressPercentage = (answered / total) * 100
+	const progressPercentage = total > 0 ? (answered / total) * 100 : 0
 
 	return (
 		<div className="flex flex-col gap-3 p-4 rounded-lg border border-border bg-card">

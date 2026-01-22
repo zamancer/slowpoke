@@ -31,7 +31,7 @@ export const QuizResults = ({
 }: QuizResultsProps) => {
 	const correctCount = results.filter((r) => r.isCorrect).length
 	const totalQuestions = results.length
-	const percentage = Math.round((correctCount / totalQuestions) * 100)
+	const percentage = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0
 
 	const getScoreMessage = () => {
 		if (percentage >= 90) return 'Excellent!'
