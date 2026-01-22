@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as QuizzesIndexRouteImport } from './routes/quizzes/index'
 import { Route as FlashcardsIndexRouteImport } from './routes/flashcards/index'
+import { Route as QuizzesQuizIdRouteImport } from './routes/quizzes/$quizId'
 import { Route as FlashcardsGroupIdRouteImport } from './routes/flashcards/$groupId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -18,9 +20,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuizzesIndexRoute = QuizzesIndexRouteImport.update({
+  id: '/quizzes/',
+  path: '/quizzes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FlashcardsIndexRoute = FlashcardsIndexRouteImport.update({
   id: '/flashcards/',
   path: '/flashcards/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizzesQuizIdRoute = QuizzesQuizIdRouteImport.update({
+  id: '/quizzes/$quizId',
+  path: '/quizzes/$quizId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FlashcardsGroupIdRoute = FlashcardsGroupIdRouteImport.update({
@@ -32,31 +44,55 @@ const FlashcardsGroupIdRoute = FlashcardsGroupIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/flashcards/$groupId': typeof FlashcardsGroupIdRoute
+  '/quizzes/$quizId': typeof QuizzesQuizIdRoute
   '/flashcards/': typeof FlashcardsIndexRoute
+  '/quizzes/': typeof QuizzesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/flashcards/$groupId': typeof FlashcardsGroupIdRoute
+  '/quizzes/$quizId': typeof QuizzesQuizIdRoute
   '/flashcards': typeof FlashcardsIndexRoute
+  '/quizzes': typeof QuizzesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/flashcards/$groupId': typeof FlashcardsGroupIdRoute
+  '/quizzes/$quizId': typeof QuizzesQuizIdRoute
   '/flashcards/': typeof FlashcardsIndexRoute
+  '/quizzes/': typeof QuizzesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/flashcards/$groupId' | '/flashcards/'
+  fullPaths:
+    | '/'
+    | '/flashcards/$groupId'
+    | '/quizzes/$quizId'
+    | '/flashcards/'
+    | '/quizzes/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/flashcards/$groupId' | '/flashcards'
-  id: '__root__' | '/' | '/flashcards/$groupId' | '/flashcards/'
+  to:
+    | '/'
+    | '/flashcards/$groupId'
+    | '/quizzes/$quizId'
+    | '/flashcards'
+    | '/quizzes'
+  id:
+    | '__root__'
+    | '/'
+    | '/flashcards/$groupId'
+    | '/quizzes/$quizId'
+    | '/flashcards/'
+    | '/quizzes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   FlashcardsGroupIdRoute: typeof FlashcardsGroupIdRoute
+  QuizzesQuizIdRoute: typeof QuizzesQuizIdRoute
   FlashcardsIndexRoute: typeof FlashcardsIndexRoute
+  QuizzesIndexRoute: typeof QuizzesIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -68,11 +104,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quizzes/': {
+      id: '/quizzes/'
+      path: '/quizzes'
+      fullPath: '/quizzes/'
+      preLoaderRoute: typeof QuizzesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/flashcards/': {
       id: '/flashcards/'
       path: '/flashcards'
       fullPath: '/flashcards/'
       preLoaderRoute: typeof FlashcardsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quizzes/$quizId': {
+      id: '/quizzes/$quizId'
+      path: '/quizzes/$quizId'
+      fullPath: '/quizzes/$quizId'
+      preLoaderRoute: typeof QuizzesQuizIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/flashcards/$groupId': {
@@ -88,7 +138,9 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   FlashcardsGroupIdRoute: FlashcardsGroupIdRoute,
+  QuizzesQuizIdRoute: QuizzesQuizIdRoute,
   FlashcardsIndexRoute: FlashcardsIndexRoute,
+  QuizzesIndexRoute: QuizzesIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
