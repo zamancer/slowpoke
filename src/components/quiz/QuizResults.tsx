@@ -70,6 +70,20 @@ export const QuizResults = ({
 
 				{results.map((result, index) => {
 					const question = shuffledQuestions[result.questionIndex]
+
+					if (!question) {
+						return (
+							<div
+								key={`result-${result.questionIndex}`}
+								className="p-4 rounded-lg border border-border bg-muted/50"
+							>
+								<span className="text-muted-foreground">
+									Question data unavailable
+								</span>
+							</div>
+						)
+					}
+
 					const selectedOption = question.options.find(
 						(o) => o.label === result.selectedAnswer,
 					)
