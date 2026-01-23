@@ -1,5 +1,5 @@
-import type { FlashcardGroup } from 'content-collections'
 import { Link } from '@tanstack/react-router'
+import type { FlashcardGroup } from 'content-collections'
 import { cn } from '@/lib/utils'
 
 interface FlashcardGroupListProps {

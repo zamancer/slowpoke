@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useId } from 'react'
+import { useId, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface Option {
@@ -24,6 +24,7 @@ interface QuizQuestionProps {
 	hasAnswered: boolean
 	selectedAnswer?: string
 	isLastQuestion: boolean
+	showJustification?: boolean
 }
 
 const MIN_JUSTIFICATION_LENGTH = 50
@@ -36,6 +37,7 @@ export const QuizQuestion = ({
 	hasAnswered,
 	selectedAnswer,
 	isLastQuestion,
+	showJustification = true,
 }: QuizQuestionProps) => {
 	const [selected, setSelected] = useState<string | null>(null)
 	const [justification, setJustification] = useState('')
@@ -43,8 +45,9 @@ export const QuizQuestion = ({
 	const justificationId = useId()
 
 	const isCorrect = selectedAnswer === question.answer
-	const canSubmit =
-		selected !== null && justification.length >= MIN_JUSTIFICATION_LENGTH
+	const canSubmit = showJustification
+		? selected !== null && justification.length >= MIN_JUSTIFICATION_LENGTH
+		: selected !== null
 
 	const handleSubmit = () => {
 		if (!canSubmit) {
@@ -93,7 +96,9 @@ export const QuizQuestion = ({
 										'flex items-start gap-3 p-4 rounded-lg border text-left transition-all',
 										'hover:border-primary/50 hover:bg-primary/5',
 										hasAnswered && 'cursor-default hover:bg-transparent',
-										!hasAnswered && isSelected && 'border-primary bg-primary/10',
+										!hasAnswered &&
+											isSelected &&
+											'border-primary bg-primary/10',
 										showCorrectHighlight &&
 											'border-green-500 bg-green-50 dark:bg-green-950',
 										showIncorrectHighlight &&
@@ -122,7 +127,7 @@ export const QuizQuestion = ({
 				</div>
 			</div>
 
-			{!hasAnswered && (
+			{!hasAnswered && showJustification && (
 				<div className="p-6 rounded-lg border border-border bg-card">
 					<div className="flex flex-col gap-3">
 						<label htmlFor={justificationId} className="font-medium">

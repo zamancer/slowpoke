@@ -1,5 +1,5 @@
-import { allQuizzes } from 'content-collections'
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
+import { allQuizzes } from 'content-collections'
 import { QuizContainer } from '@/components/quiz/QuizContainer'
 
 export const Route = createFileRoute('/quizzes/$quizId')({
