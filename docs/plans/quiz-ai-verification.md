@@ -4,7 +4,7 @@
 
 This plan describes the implementation of AI-powered verification of quiz justifications using Claude. When enabled, the user's written justification is submitted to Claude for evaluation, providing richer feedback beyond the simple answer-key comparison currently in place.
 
-Per the master plan, AI verification is toggled per study session (default: ON). The toggle is always visible at the top of the quiz UI, giving the user full control over when to activate or deactivate verification. When OFF, the justification textbox is hidden and the AI submission is skipped entirely—the quiz operates in simple answer-key mode.
+Per the master plan, AI verification is toggled per study session (default: ON for authenticated users, OFF for unauthenticated users). The toggle is always visible at the top of the quiz UI, giving the user full control over when to activate or deactivate verification. When OFF (or when unauthenticated), the justification textbox is hidden and the AI submission is skipped entirely—the quiz operates in simple answer-key mode.
 
 ---
 
@@ -12,7 +12,7 @@ Per the master plan, AI verification is toggled per study session (default: ON).
 
 ### Problem
 
-Quiz content lives in markdown files processed by `@content-collections/core` at build time. The resulting typed data (`allQuizzes`) is available as a static import. We need to send question context (question text, options, correct answer, expert explanation) to the AI without breaking this build-time pattern.
+Quiz content lives in Markdown files processed by `@content-collections/core` at build time. The resulting typed data (`allQuizzes`) is available as a static import. We need to send question context (question text, options, correct answer, expert explanation) to the AI without breaking this build-time pattern.
 
 ### Solution
 
@@ -64,6 +64,29 @@ Respond with:
 - If FAIL: what the student should focus on to improve their understanding
 ```
 
+**Prompt file organization:**
+
+This system prompt (and future specialized prompts) will live in a dedicated directory rather than being inlined in the API route handler. This keeps prompts version-controlled, reviewable, and easy to iterate on independently from code logic.
+
+```
+src/lib/prompts/
+├── quiz-verification.ts   ← exported as a template function
+└── index.ts               ← barrel export
+```
+
+Each prompt file exports a function that accepts the dynamic context and returns the final prompt string:
+
+```typescript
+// src/lib/prompts/quiz-verification.ts
+import type { VerificationPayload } from '@/types/quiz'
+
+export const buildQuizVerificationPrompt = (payload: VerificationPayload): string => {
+  // Returns the formatted system + user prompt
+}
+```
+
+The API route then imports and calls this function, keeping the handler focused on transport and auth concerns. As more prompts are added (e.g., flashcard generation, study plan suggestions), they follow the same pattern in this directory.
+
 ---
 
 ## 2. Reusing @tanstack/ai
@@ -74,7 +97,7 @@ The codebase already has:
 - `@tanstack/ai-anthropic` (v0.2.0) installed
 - `@tanstack/ai-react` (v0.2.2) with `useChat` hook
 - `src/lib/ai-hook.ts` with a configured `useAIChat` hook pointing to `/api/ai/chat`
-- `streamdown` (v1.6.5) installed for rendering streamed markdown
+- `streamdown` (v1.6.5) installed for rendering streamed Markdown
 
 ### Can We Reuse It?
 
@@ -85,7 +108,7 @@ The codebase already has:
 | Interaction | Multi-turn conversation | Single request/response |
 | Streaming | Continuous stream display | Stream into a contained feedback area |
 | Context | User-driven | System-constructed from question data |
-| Response format | Free-form markdown | Structured (verdict + explanation) |
+| Response format | Free-form Markdown | Structured (verdict + explanation) |
 
 ### Recommended Approach
 
@@ -198,14 +221,14 @@ The AI verification feedback renders as a separate card **after** the QuizQuesti
 └─────────────────────────────────────┘
 ┌─────────────────────────────────────┐  ← QuizAIFeedback (sibling)
 │ AI Verification                     │
-│ [Streaming markdown response]       │
+│ [Streaming Markdown response]       │
 │ Verdict: PASS/FAIL badge            │
 └─────────────────────────────────────┘
 ```
 
 ### Streaming Display
 
-Use the installed `streamdown` package to render the AI response as it streams in. This provides real-time feedback while maintaining proper markdown formatting.
+Use the installed `streamdown` package to render the AI response as it streams in. This provides real-time feedback while maintaining proper Markdown formatting.
 
 ### Component Structure
 
@@ -216,7 +239,7 @@ QuizContainer (orchestrator)
 ├── QuizVerificationToggle (top-level toggle, always visible)
 ├── QuizQuestion (question + options + justification input)
 ├── QuizAIFeedback (verification result, shown after submit)
-│   ├── Streaming markdown area (streamdown)
+│   ├── Streaming Markdown area (streamdown)
 │   ├── Verdict badge (PASS/FAIL)
 │   └── Error/retry UI (if applicable)
 └── QuizResults (final summary)
@@ -244,7 +267,7 @@ When the user submits their answer:
    - Skeleton loader with a subtle pulse animation
    - Text: "Evaluating your justification..."
    - The "Next Question" button remains **enabled** (user can proceed without waiting)
-3. **Stream begins**: Replace skeleton with streaming markdown as tokens arrive
+3. **Stream begins**: Replace skeleton with streaming Markdown as tokens arrive
 4. **Stream complete**: Show final verdict badge, remove loading indicators
 
 This non-blocking approach ensures the AI verification enhances the experience without slowing down the quiz flow.
