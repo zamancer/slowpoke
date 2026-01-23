@@ -4,7 +4,7 @@
 
 This plan describes the implementation of AI-powered verification of quiz justifications using Claude. When enabled, the user's written justification is submitted to Claude for evaluation, providing richer feedback beyond the simple answer-key comparison currently in place.
 
-Per the master plan, AI verification is toggled per study session (default: ON). When OFF, the justification field is hidden and the AI submission is skipped.
+Per the master plan, AI verification is toggled per study session (default: ON). The toggle is always visible at the top of the quiz UI, giving the user full control over when to activate or deactivate verification. When OFF, the justification textbox is hidden and the AI submission is skipped entirely—the quiz operates in simple answer-key mode.
 
 ---
 
@@ -186,19 +186,20 @@ const isTrulyCorrect = result.isCorrect && result.aiVerification?.verdict === 'P
 
 ### UI Placement
 
-The AI verification feedback appears **after** the existing expert explanation section in `QuizQuestion.tsx`, as a new card:
+The AI verification feedback renders as a separate card **after** the QuizQuestion component in the QuizContainer layout. Visually it appears below the expert explanation:
 
 ```
-┌─────────────────────────────────────┐
+┌─────────────────────────────────────┐  ← QuizQuestion
+│ Question + Options                  │
+│ [Justification textbox]             │  ← hidden when toggle OFF
 │ [Correct/Incorrect banner]          │
 │ Expert Explanation: ...             │
 │ Common Mistakes: ...                │
-├─────────────────────────────────────┤
+└─────────────────────────────────────┘
+┌─────────────────────────────────────┐  ← QuizAIFeedback (sibling)
 │ AI Verification                     │
-│ ┌─────────────────────────────────┐ │
-│ │ [Streaming markdown response]   │ │
-│ │ Verdict: PASS/FAIL badge        │ │
-│ └─────────────────────────────────┘ │
+│ [Streaming markdown response]       │
+│ Verdict: PASS/FAIL badge            │
 └─────────────────────────────────────┘
 ```
 
@@ -208,15 +209,20 @@ Use the installed `streamdown` package to render the AI response as it streams i
 
 ### Component Structure
 
+`QuizAIFeedback` is a **sibling** component to `QuizQuestion`, not nested inside it. Both live in `src/components/quiz/` and are orchestrated by `QuizContainer`:
+
 ```
-QuizQuestion
-├── [existing question + options UI]
-├── [existing feedback card]
-└── QuizAIFeedback (new component)
-    ├── Streaming markdown area (streamdown)
-    ├── Verdict badge (PASS/FAIL)
-    └── Error/retry UI (if applicable)
+QuizContainer (orchestrator)
+├── QuizVerificationToggle (top-level toggle, always visible)
+├── QuizQuestion (question + options + justification input)
+├── QuizAIFeedback (verification result, shown after submit)
+│   ├── Streaming markdown area (streamdown)
+│   ├── Verdict badge (PASS/FAIL)
+│   └── Error/retry UI (if applicable)
+└── QuizResults (final summary)
 ```
+
+`QuizAIFeedback` receives its props from `QuizContainer` state (verification status, streamed content, error info). It cannot function standalone without quiz context, so bundling it in the same `quiz/` directory is appropriate, but it renders as a sibling to `QuizQuestion` in the DOM—not inside it.
 
 ### QuizResults Integration
 
@@ -282,24 +288,29 @@ When the server receives a 429 from the Anthropic API:
 
 ### Session-Level Degradation
 
-If 3+ consecutive verification requests fail (any error type), show a session-level banner:
+The verification toggle at the top of the quiz UI (see Component Structure) is always available for the user to manually enable/disable AI verification at any point.
 
-> "AI verification is experiencing issues. You can continue the quiz without it, or try again later."
+If 3+ consecutive verification requests fail (any error type):
 
-Provide a toggle to disable AI verification for the remainder of the session.
+1. Show a brief toast/banner notification: "AI verification is experiencing issues."
+2. Automatically flip the verification toggle to OFF (which also hides the justification textbox for subsequent questions)
+3. The user can manually re-enable the toggle at any time if they want to try again
+
+This approach avoids introducing a separate degradation UI—the existing toggle handles both user preference and degradation recovery in one place.
 
 ---
 
 ## Implementation Order
 
-1. **API Route**: Create `src/routes/api/ai/quiz-verify.ts` with the Claude integration
-2. **Hook**: Create `src/hooks/useQuizVerification.ts` with the dedicated chat options
-3. **QuizAIFeedback component**: Streaming display with verdict badge, loading, and error states
-4. **QuizContainer updates**: Add verification toggle state, update `QuestionResult` type, wire up the hook on answer submit
-5. **QuizQuestion updates**: Render `QuizAIFeedback` in the feedback section
-6. **QuizResults updates**: Show AI verdict badges, handle the "correct answer but failed justification" case
-7. **Session toggle**: Add UI for enabling/disabling AI verification at quiz start
-8. **Environment & deployment**: Document `ANTHROPIC_API_KEY` requirement, add to deployment config
+1. **MVP Auth on quiz page**: Add Clerk `<SignInButton>`/`<UserButton>` to the quiz page so users can authenticate (required for the API endpoint). See section below.
+2. **API Route**: Create `src/routes/api/ai/quiz-verify.ts` with Clerk session validation and Claude integration
+3. **Hook**: Create `src/hooks/useQuizVerification.ts` with the dedicated chat options
+4. **QuizVerificationToggle component**: Top-level toggle rendered by QuizContainer, controls whether justification input and AI feedback are active
+5. **QuizAIFeedback component**: Sibling to QuizQuestion, handles streaming display with verdict badge, loading, and error states
+6. **QuizContainer updates**: Orchestrate toggle state, update `QuestionResult` type, conditionally show/hide justification in QuizQuestion, wire up the hook on answer submit, handle degradation (auto-disable toggle after 3 failures)
+7. **QuizQuestion updates**: Accept a prop to show/hide justification textbox based on toggle state
+8. **QuizResults updates**: Show AI verdict badges, handle the "correct answer but failed justification" case
+9. **Environment & deployment**: Document `ANTHROPIC_API_KEY` requirement, add to deployment config
 
 ---
 
@@ -311,6 +322,40 @@ Use `claude-sonnet-4-20250514` for verification:
 - Cost-effective for per-question evaluations (short prompts, short responses)
 
 Avoid Opus for this use case as the latency and cost are unnecessary for structured evaluation of 50-200 character justifications.
+
+---
+
+## MVP Authentication on Quiz Page
+
+The login/signup UI was previously removed from the app while the overall navigation is being designed. Since the AI verification endpoint requires authentication (to prevent abuse and enforce rate limits), we need a minimal auth presence on the quiz page.
+
+### Approach
+
+Use Clerk's pre-built components directly on the quiz page:
+
+- **Signed out**: Show a `<SignInButton>` in the quiz header area (near the verification toggle). When verification is toggled ON without being signed in, prompt the user to sign in with a brief inline message: "Sign in to enable AI verification of your answers."
+- **Signed in**: Show a `<UserButton>` in the same location for session management.
+
+This keeps auth minimal and scoped to the quiz page without requiring global navigation changes. The overall app navigation and auth UX can be designed independently later.
+
+### Component Placement
+
+```
+QuizContainer
+├── Quiz header bar
+│   ├── Quiz title / progress
+│   ├── QuizVerificationToggle
+│   └── <SignInButton> or <UserButton> (Clerk)
+├── QuizQuestion
+├── QuizAIFeedback
+└── QuizResults
+```
+
+### Behavior When Not Authenticated
+
+- The verification toggle is visible but shows a lock/sign-in prompt when activated without auth
+- The quiz itself works fully without auth (answer-key mode, no justification)
+- Only the AI verification feature is gated behind authentication
 
 ---
 
