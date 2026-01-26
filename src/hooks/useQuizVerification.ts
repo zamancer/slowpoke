@@ -77,19 +77,18 @@ export const useQuizVerification = () => {
 		}
 
 		if (isLoading && assistantText.length > 0) {
-			clearTimeouts()
-			setVerification((prev) =>
-				prev
-					? { ...prev, status: 'streaming', explanation: assistantText }
-					: null,
-			)
+			// Only update if the explanation actually changed
+			if (verification.explanation !== assistantText) {
+				clearTimeouts()
+				setVerification((prev) =>
+					prev
+						? { ...prev, status: 'streaming', explanation: assistantText }
+						: null,
+				)
+			}
 		}
 
-		if (
-			!isLoading &&
-			assistantText.length > 0 &&
-			verification.status !== 'complete'
-		) {
+		if (!isLoading && assistantText.length > 0) {
 			clearTimeouts()
 			const verdict = parseVerdict(assistantText)
 			setVerification({
