@@ -34,6 +34,10 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 	const [verificationEnabled, setVerificationEnabled] = useState(true)
 	const consecutiveFailuresRef = useRef(0)
 	const lastPayloadRef = useRef<VerificationPayload | null>(null)
+	const verificationTokenRef = useRef(0)
+	const activeTokenRef = useRef(0)
+	const isVerifyingRef = useRef(false)
+	const pendingResetRef = useRef(false)
 
 	const { verification, verify, reset, streamedText } = useQuizVerification()
 
@@ -49,19 +53,25 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 	const canVerify = verificationEnabled && isSignedIn
 
 	useEffect(() => {
+		if (!verificationEnabled) return
+		if (activeTokenRef.current !== verificationTokenRef.current) return
 		if (verification?.status === 'error') {
 			consecutiveFailuresRef.current += 1
 			if (consecutiveFailuresRef.current >= CONSECUTIVE_FAILURES_THRESHOLD) {
 				setVerificationEnabled(false)
 				consecutiveFailuresRef.current = 0
+				isVerifyingRef.current = false
+				pendingResetRef.current = false
 			}
 		}
 		if (verification?.status === 'complete') {
 			consecutiveFailuresRef.current = 0
 		}
-	}, [verification?.status])
+	}, [verification?.status, verificationEnabled])
 
 	useEffect(() => {
+		if (!verificationEnabled) return
+		if (activeTokenRef.current !== verificationTokenRef.current) return
 		if (
 			verification?.status === 'complete' ||
 			verification?.status === 'error'
@@ -83,8 +93,13 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 				}
 				return updated
 			})
+			isVerifyingRef.current = false
+			if (pendingResetRef.current) {
+				pendingResetRef.current = false
+				reset()
+			}
 		}
-	}, [verification])
+	}, [verification, verificationEnabled, reset])
 
 	const handleAnswerSubmit = useCallback(
 		(selectedAnswer: string, justification: string) => {
@@ -118,6 +133,8 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 					quizType: quiz.type as VerificationPayload['quizType'],
 				}
 				lastPayloadRef.current = payload
+				activeTokenRef.current = verificationTokenRef.current
+				isVerifyingRef.current = true
 				verify(payload)
 			}
 		},
@@ -126,12 +143,17 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 
 	const handleRetry = useCallback(() => {
 		if (lastPayloadRef.current) {
+			isVerifyingRef.current = true
 			verify(lastPayloadRef.current)
 		}
 	}, [verify])
 
 	const handleNextQuestion = useCallback(() => {
-		reset()
+		if (isVerifyingRef.current) {
+			pendingResetRef.current = true
+		} else {
+			reset()
+		}
 		lastPayloadRef.current = null
 		if (currentQuestionIndex < totalQuestions - 1) {
 			setCurrentQuestionIndex((prev) => prev + 1)
@@ -147,14 +169,36 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 		reset()
 		lastPayloadRef.current = null
 		consecutiveFailuresRef.current = 0
+		isVerifyingRef.current = false
+		pendingResetRef.current = false
 	}, [reset])
 
-	const handleToggle = useCallback((enabled: boolean) => {
-		setVerificationEnabled(enabled)
-		if (enabled) {
-			consecutiveFailuresRef.current = 0
-		}
-	}, [])
+	const handleToggle = useCallback(
+		(enabled: boolean) => {
+			setVerificationEnabled(enabled)
+			if (enabled) {
+				consecutiveFailuresRef.current = 0
+			} else {
+				verificationTokenRef.current += 1
+				isVerifyingRef.current = false
+				pendingResetRef.current = false
+				reset()
+				setResults((prev) =>
+					prev.map((r) => {
+						if (!r.aiVerification) return r
+						const originalCorrect =
+							r.selectedAnswer === shuffledQuestions[r.questionIndex]?.answer
+						return {
+							...r,
+							aiVerification: undefined,
+							isCorrect: originalCorrect,
+						}
+					}),
+				)
+			}
+		},
+		[reset, shuffledQuestions],
+	)
 
 	const currentResult = results.find(
 		(r) => r.questionIndex === currentQuestionIndex,
