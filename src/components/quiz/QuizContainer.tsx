@@ -207,8 +207,9 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 	const showEvaluation =
 		hasAnswered &&
 		(!canVerify ||
-			currentResult?.aiVerification?.status === 'complete' ||
-			currentResult?.aiVerification?.status === 'error')
+			!currentResult?.aiVerification ||
+			currentResult.aiVerification.status === 'complete' ||
+			currentResult.aiVerification.status === 'error')
 
 	if (isComplete) {
 		return (
