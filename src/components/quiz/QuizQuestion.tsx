@@ -183,14 +183,14 @@ export const QuizQuestion = ({
 			)}
 
 			{hasAnswered && !showEvaluation && (
-				<div className="p-6 rounded-lg border border-border bg-card">
+				<output className="block p-6 rounded-lg border border-border bg-card">
 					<div className="flex items-center gap-3">
 						<div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
 						<span className="text-muted-foreground">
 							Evaluating your answer...
 						</span>
 					</div>
-				</div>
+				</output>
 			)}
 
 			{hasAnswered && showEvaluation && (
