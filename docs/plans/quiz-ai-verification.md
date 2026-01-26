@@ -42,7 +42,7 @@ interface VerificationPayload {
 
 The server endpoint builds a system prompt that frames Claude's role as a DSA tutor evaluating a student's reasoning. The question context is injected into the user message:
 
-```
+```text
 You are a DSA (Data Structures & Algorithms) tutor evaluating a student's justification for a quiz answer.
 
 Question: {question}
@@ -68,7 +68,7 @@ Respond with:
 
 This system prompt (and future specialized prompts) will live in a dedicated directory rather than being inlined in the API route handler. This keeps prompts version-controlled, reviewable, and easy to iterate on independently from code logic.
 
-```
+```text
 src/lib/prompts/
 ├── quiz-verification.ts   ← exported as a template function
 └── index.ts               ← barrel export
@@ -154,7 +154,7 @@ The API route at `src/routes/api/ai/quiz-verify.ts` uses `chat()` with `anthropi
 
 Required in `.env.local`:
 
-```
+```text
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
@@ -187,7 +187,7 @@ See `src/types/quiz.ts` for the full type definitions (`QuestionResult`, `AiVeri
 
 The AI verification feedback renders as a separate card **after** the QuizQuestion component in the QuizContainer layout. When AI verification is enabled, the evaluation banner inside QuizQuestion is **deferred** until verification completes — showing a spinner ("Evaluating your answer...") in the meantime. When verification is OFF, the banner renders immediately.
 
-```
+```text
 ┌─────────────────────────────────────┐  ← QuizQuestion
 │ Question + Options                  │
 │ [Justification textbox]             │  ← hidden when toggle OFF
@@ -210,7 +210,7 @@ Use the installed `streamdown` package to render the AI response as it streams i
 
 `QuizAIFeedback` is a **sibling** component to `QuizQuestion`, not nested inside it. Both live in `src/components/quiz/` and are orchestrated by `QuizContainer`:
 
-```
+```text
 QuizContainer (orchestrator)
 ├── QuizVerificationToggle (top-level toggle, always visible)
 ├── QuizQuestion (question + options + justification input)
@@ -344,7 +344,7 @@ This keeps auth minimal and scoped to the quiz page without requiring global nav
 
 Auth UI (`<SignInButton>` / `<UserButton>`) is embedded inside the `QuizVerificationToggle` component itself, rather than as a separate sibling in the header:
 
-```
+```text
 QuizContainer
 ├── Quiz header bar
 │   ├── Quiz title / progress
