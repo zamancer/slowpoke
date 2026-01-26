@@ -22,13 +22,13 @@ The content-collections pattern stays untouched. At runtime, when the user submi
 
 ```typescript
 interface VerificationPayload {
-  question: string
-  options: { label: string; text: string }[]
-  correctAnswer: string
-  selectedAnswer: string
-  justification: string
-  explanation: string // expert explanation from content
-  quizType: 'pattern-selection' | 'anti-patterns' | 'big-o'
+  question: string;
+  options: { label: string; text: string }[];
+  correctAnswer: string;
+  selectedAnswer: string;
+  justification: string;
+  explanation: string; // expert explanation from content
+  quizType: "pattern-selection" | "anti-patterns" | "big-o";
 }
 ```
 
@@ -78,11 +78,13 @@ Each prompt file exports a function that accepts the dynamic context and returns
 
 ```typescript
 // src/lib/prompts/quiz-verification.ts
-import type { VerificationPayload } from '@/types/quiz'
+import type { VerificationPayload } from "@/types/quiz";
 
-export const buildQuizVerificationPrompt = (payload: VerificationPayload): string => {
+export const buildQuizVerificationPrompt = (
+  payload: VerificationPayload,
+): string => {
   // Returns the formatted system + user prompt
-}
+};
 ```
 
 The API route then imports and calls this function, keeping the handler focused on transport and auth concerns. As more prompts are added (e.g., flashcard generation, study plan suggestions), they follow the same pattern in this directory.
@@ -94,6 +96,7 @@ The API route then imports and calls this function, keeping the handler focused 
 ### Current State
 
 The codebase already has:
+
 - `@tanstack/ai-anthropic` (v0.2.0) installed
 - `@tanstack/ai-react` (v0.2.2) with `useChat` hook
 - `src/lib/ai-hook.ts` with a configured `useAIChat` hook pointing to `/api/ai/chat`
@@ -103,12 +106,12 @@ The codebase already has:
 
 **Yes, partially.** The existing `useAIChat` hook from `src/lib/ai-hook.ts` is designed for a general-purpose chat interface (conversational, multi-turn). Quiz verification has different requirements:
 
-| Concern | Chat (useAIChat) | Quiz Verification |
-|---------|-------------------|-------------------|
-| Interaction | Multi-turn conversation | Single request/response |
-| Streaming | Continuous stream display | Stream into a contained feedback area |
-| Context | User-driven | System-constructed from question data |
-| Response format | Free-form Markdown | Structured (verdict + explanation) |
+| Concern         | Chat (useAIChat)          | Quiz Verification                     |
+| --------------- | ------------------------- | ------------------------------------- |
+| Interaction     | Multi-turn conversation   | Single request/response               |
+| Streaming       | Continuous stream display | Stream into a contained feedback area |
+| Context         | User-driven               | System-constructed from question data |
+| Response format | Free-form Markdown        | Structured (verdict + explanation)    |
 
 ### Recommended Approach
 
@@ -120,22 +123,24 @@ import {
   createChatClientOptions,
   fetchServerSentEvents,
   useChat,
-} from '@tanstack/ai-react'
+} from "@tanstack/ai-react";
 
 const verificationOptions = createChatClientOptions({
-  connection: fetchServerSentEvents('/api/ai/quiz-verify'),
-})
+  connection: fetchServerSentEvents("/api/ai/quiz-verify"),
+});
 
-export const useQuizVerification = () => useChat(verificationOptions)
+export const useQuizVerification = () => useChat(verificationOptions);
 ```
 
 **Server endpoint:** Create a TanStack Start API route at `src/routes/api/ai/quiz-verify.ts` that:
+
 1. Receives the `VerificationPayload`
 2. Constructs the system + user prompt
 3. Calls Claude via `@tanstack/ai-anthropic`
 4. Streams the response back via SSE
 
 This approach:
+
 - Reuses the installed `@tanstack/ai-react` and `@tanstack/ai-anthropic` packages
 - Keeps quiz verification isolated from the general chat functionality
 - Uses the same SSE transport pattern already configured
@@ -143,27 +148,12 @@ This approach:
 
 ### Server-Side Implementation
 
-```typescript
-// src/routes/api/ai/quiz-verify.ts
-import { createAPIFileRoute } from '@tanstack/react-start/api'
-import { createChatHandler } from '@tanstack/ai'
-import { anthropicAdapter } from '@tanstack/ai-anthropic'
-
-export const APIRoute = createAPIFileRoute('/api/ai/quiz-verify')({
-  POST: createChatHandler({
-    adapter: anthropicAdapter({
-      model: 'claude-sonnet-4-20250514',
-    }),
-    onBeforeCall: ({ messages }) => {
-      // Inject system prompt and validate payload
-    },
-  }),
-})
-```
+The API route at `src/routes/api/ai/quiz-verify.ts` uses `chat()` with `anthropicText` adapter and `toServerSentEventsResponse()` from `@tanstack/ai` (rather than the `createChatHandler` shorthand originally planned). The system prompt is injected via `getSystemPrompt()` from the prompts module.
 
 ### Environment Variables
 
 Required in `.env.local`:
+
 ```
 ANTHROPIC_API_KEY=sk-ant-...
 ```
@@ -178,45 +168,31 @@ Validate with `@t3-oss/env-core` (already in dependencies) to fail fast on missi
 
 The AI response includes a verdict (`PASS` or `FAIL`). This verdict evaluates the **quality of the justification**, independent of whether the selected answer was correct:
 
-| Selected Answer | Justification Verdict | Final Result |
-|-----------------|----------------------|--------------|
-| Correct | PASS | Correct |
-| Correct | FAIL | **Failed** (wrong reasoning) |
-| Incorrect | PASS | Incorrect (but good reasoning noted) |
-| Incorrect | FAIL | Incorrect |
+| Selected Answer | Justification Verdict | Final Result                         |
+| --------------- | --------------------- | ------------------------------------ |
+| Correct         | PASS                  | Correct                              |
+| Correct         | FAIL                  | **Failed** (wrong reasoning)         |
+| Incorrect       | PASS                  | Incorrect (but good reasoning noted) |
+| Incorrect       | FAIL                  | Incorrect                            |
 
 A correct answer with a failed justification is marked as **failed** because the student couldn't articulate valid reasoning, suggesting they may have guessed.
 
-### Updated QuestionResult Type
+### QuestionResult Type
 
-```typescript
-interface QuestionResult {
-  questionIndex: number
-  selectedAnswer: string
-  justification: string
-  isCorrect: boolean // answer-key comparison
-  aiVerification?: {
-    verdict: 'PASS' | 'FAIL'
-    explanation: string
-    status: 'pending' | 'streaming' | 'complete' | 'error'
-    error?: string
-  }
-}
+See `src/types/quiz.ts` for the full type definitions (`QuestionResult`, `AiVerification`, `VerificationPayload`).
 
-// Final correctness when AI verification is enabled:
-const isTrulyCorrect = result.isCorrect && result.aiVerification?.verdict === 'PASS'
-```
+`isCorrect` is the **single source of truth** for correctness. When AI verification is enabled, `QuizContainer` updates `isCorrect` in-place when verification resolves — downgrading it from `true` to `false` if the answer key matched but the AI verdict was `FAIL`. No separate derived concept (e.g. `isTrulyCorrect`) is needed.
 
 ### UI Placement
 
-The AI verification feedback renders as a separate card **after** the QuizQuestion component in the QuizContainer layout. Visually it appears below the expert explanation:
+The AI verification feedback renders as a separate card **after** the QuizQuestion component in the QuizContainer layout. When AI verification is enabled, the evaluation banner inside QuizQuestion is **deferred** until verification completes — showing a spinner ("Evaluating your answer...") in the meantime. When verification is OFF, the banner renders immediately.
 
 ```
 ┌─────────────────────────────────────┐  ← QuizQuestion
 │ Question + Options                  │
 │ [Justification textbox]             │  ← hidden when toggle OFF
-│ [Correct/Incorrect banner]          │
-│ Expert Explanation: ...             │
+│ [Evaluating... / Correct/Incorrect] │  ← deferred when AI verification active
+│ Expert Explanation: ...             │  ← shown with evaluation banner
 │ Common Mistakes: ...                │
 └─────────────────────────────────────┘
 ┌─────────────────────────────────────┐  ← QuizAIFeedback (sibling)
@@ -250,6 +226,7 @@ QuizContainer (orchestrator)
 ### QuizResults Integration
 
 In `QuizResults.tsx`, each result entry gains an AI verification summary:
+
 - Show the verdict badge (green PASS / red FAIL) next to the question result
 - If the answer was correct but justification failed: override the result indicator to red with a tooltip explaining "Correct answer, but justification did not pass AI verification"
 - Expand/collapse the full AI explanation per question
@@ -260,35 +237,36 @@ In `QuizResults.tsx`, each result entry gains an AI verification summary:
 
 ### Loading State (Waiting for AI)
 
-When the user submits their answer:
+When the user submits their answer with AI verification **enabled**:
 
-1. **Immediately show** the correct/incorrect result (answer-key comparison is instant)
-2. **Show AI feedback section** in a "loading" state below the expert explanation:
-   - Skeleton loader with a subtle pulse animation
-   - Text: "Evaluating your justification..."
+1. **Defer the evaluation banner** inside QuizQuestion — show a spinner with "Evaluating your answer..." instead of Correct/Incorrect. Options show a neutral highlight (primary color) on the selected answer, no green/red yet.
+2. **Show AI feedback section** (`QuizAIFeedback` sibling card) in a loading state:
+   - Skeleton loader (3 animated lines)
    - The "Next Question" button remains **enabled** (user can proceed without waiting)
 3. **Stream begins**: Replace skeleton with streaming Markdown as tokens arrive
-4. **Stream complete**: Show final verdict badge, remove loading indicators
+4. **Stream complete**: Show final verdict badge in the AI card. Update `isCorrect` on the result. The evaluation banner in QuizQuestion now renders with green/red highlighting and the Correct/Incorrect verdict.
 
-This non-blocking approach ensures the AI verification enhances the experience without slowing down the quiz flow.
+When AI verification is **OFF**, the evaluation banner shows immediately based on the answer key (no deferral).
 
 ### Network Error Handling
 
 ```typescript
 interface VerificationError {
-  type: 'network' | 'rate_limit' | 'server' | 'timeout'
-  message: string
-  retryable: boolean
+  type: "network" | "rate_limit" | "server" | "timeout";
+  message: string;
+  retryable: boolean;
 }
 ```
 
 **On network failure:**
+
 - Show a muted error card: "Could not verify your justification. This doesn't affect your quiz score."
 - Provide a "Retry" button that re-triggers the verification request
 - The answer result (correct/incorrect from answer key) is unaffected
 - If the verification never completes, the result defaults to the answer-key comparison only (no verdict override)
 
 **Retry strategy:**
+
 - Maximum 2 automatic retries with 2s/4s delays
 - After exhausting retries, show the manual "Retry" button
 - Store the payload in component state so retries don't require user re-input
@@ -340,6 +318,7 @@ This approach avoids introducing a separate degradation UI—the existing toggle
 ## Model Selection
 
 Use `claude-sonnet-4-20250514` for verification:
+
 - Fast enough for interactive feedback (streaming)
 - Capable of nuanced evaluation of technical justifications
 - Cost-effective for per-question evaluations (short prompts, short responses)
@@ -363,12 +342,13 @@ This keeps auth minimal and scoped to the quiz page without requiring global nav
 
 ### Component Placement
 
+Auth UI (`<SignInButton>` / `<UserButton>`) is embedded inside the `QuizVerificationToggle` component itself, rather than as a separate sibling in the header:
+
 ```
 QuizContainer
 ├── Quiz header bar
 │   ├── Quiz title / progress
-│   ├── QuizVerificationToggle
-│   └── <SignInButton> or <UserButton> (Clerk)
+│   └── QuizVerificationToggle (includes Clerk auth UI)
 ├── QuizQuestion
 ├── QuizAIFeedback
 └── QuizResults
