@@ -44,12 +44,7 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 
 	const currentQuestion = shuffledQuestions[currentQuestionIndex]
 	const totalQuestions = shuffledQuestions.length
-	const correctCount = results.filter((r) => {
-		if (r.aiVerification?.status === 'complete') {
-			return r.isCorrect && r.aiVerification.verdict === 'PASS'
-		}
-		return r.isCorrect
-	}).length
+	const correctCount = results.filter((r) => r.isCorrect).length
 
 	const canVerify = verificationEnabled && isSignedIn
 
@@ -81,6 +76,10 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 				updated[lastIndex] = {
 					...lastResult,
 					aiVerification: verification,
+					isCorrect:
+						lastResult.isCorrect && verification.status === 'complete'
+							? verification.verdict === 'PASS'
+							: lastResult.isCorrect,
 				}
 				return updated
 			})
@@ -161,6 +160,11 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 		(r) => r.questionIndex === currentQuestionIndex,
 	)
 	const hasAnswered = !!currentResult
+	const showEvaluation =
+		hasAnswered &&
+		(!canVerify ||
+			currentResult?.aiVerification?.status === 'complete' ||
+			currentResult?.aiVerification?.status === 'error')
 
 	if (isComplete) {
 		return (
@@ -216,6 +220,8 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 				onNext={handleNextQuestion}
 				hasAnswered={hasAnswered}
 				selectedAnswer={currentResult?.selectedAnswer}
+				isCorrect={currentResult?.isCorrect ?? false}
+				showEvaluation={showEvaluation}
 				isLastQuestion={currentQuestionIndex === totalQuestions - 1}
 				showJustification={canVerify}
 			/>

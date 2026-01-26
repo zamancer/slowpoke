@@ -32,13 +32,6 @@ const VerdictBadge = ({ verdict }: { verdict: 'PASS' | 'FAIL' }) => (
 	</span>
 )
 
-const isTrulyCorrect = (result: QuestionResult): boolean => {
-	if (result.aiVerification?.status === 'complete') {
-		return result.isCorrect && result.aiVerification.verdict === 'PASS'
-	}
-	return result.isCorrect
-}
-
 export const QuizResults = ({
 	quiz,
 	results,
@@ -47,7 +40,7 @@ export const QuizResults = ({
 	verificationEnabled = false,
 }: QuizResultsProps) => {
 	const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
-	const correctCount = results.filter(isTrulyCorrect).length
+	const correctCount = results.filter((r) => r.isCorrect).length
 	const totalQuestions = results.length
 	const percentage =
 		totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0
@@ -109,11 +102,10 @@ export const QuizResults = ({
 					const correctOption = question.options.find(
 						(o) => o.label === question.answer,
 					)
-					const trulyCorrect = isTrulyCorrect(result)
 					const correctAnswerButFailedJustification =
-						result.isCorrect &&
-						result.aiVerification?.status === 'complete' &&
-						result.aiVerification.verdict === 'FAIL'
+						result.selectedAnswer === question.answer &&
+						!result.isCorrect &&
+						result.aiVerification?.status === 'complete'
 					const isExpanded = expandedIndex === index
 
 					return (
@@ -121,7 +113,7 @@ export const QuizResults = ({
 							key={`result-${result.questionIndex}`}
 							className={cn(
 								'p-4 rounded-lg border',
-								trulyCorrect
+								result.isCorrect
 									? 'border-green-500/50 bg-green-50/50 dark:bg-green-950/30'
 									: 'border-red-500/50 bg-red-50/50 dark:bg-red-950/30',
 							)}
@@ -131,7 +123,7 @@ export const QuizResults = ({
 									<span
 										className={cn(
 											'flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium shrink-0',
-											trulyCorrect
+											result.isCorrect
 												? 'bg-green-500 text-white'
 												: 'bg-red-500 text-white',
 										)}
@@ -160,14 +152,14 @@ export const QuizResults = ({
 										<span
 											className={cn(
 												'font-medium',
-												trulyCorrect ? 'text-green-600' : 'text-red-600',
+												result.isCorrect ? 'text-green-600' : 'text-red-600',
 											)}
 										>
 											{result.selectedAnswer}. {selectedOption?.text}
 										</span>
 									</div>
 
-									{!result.isCorrect && (
+									{result.selectedAnswer !== question.answer && (
 										<div>
 											<span className="text-muted-foreground">
 												Correct answer:{' '}
