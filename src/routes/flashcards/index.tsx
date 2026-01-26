@@ -1,5 +1,5 @@
-import { allFlashcardGroups } from 'content-collections'
 import { createFileRoute } from '@tanstack/react-router'
+import { allFlashcardGroups } from 'content-collections'
 import { FlashcardGroupList } from '@/components/flashcard/FlashcardGroupList'
 
 export const Route = createFileRoute('/flashcards/')({

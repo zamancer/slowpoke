@@ -1,5 +1,5 @@
-import { allQuizzes } from 'content-collections'
 import { createFileRoute } from '@tanstack/react-router'
+import { allQuizzes } from 'content-collections'
 import { QuizList } from '@/components/quiz/QuizList'
 
 export const Route = createFileRoute('/quizzes/')({

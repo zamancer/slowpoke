@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useId } from 'react'
+import { useId, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface Option {
@@ -23,7 +23,10 @@ interface QuizQuestionProps {
 	onNext: () => void
 	hasAnswered: boolean
 	selectedAnswer?: string
+	isCorrect?: boolean
+	showEvaluation?: boolean
 	isLastQuestion: boolean
+	showJustification?: boolean
 }
 
 const MIN_JUSTIFICATION_LENGTH = 50
@@ -35,16 +38,21 @@ export const QuizQuestion = ({
 	onNext,
 	hasAnswered,
 	selectedAnswer,
+	isCorrect = false,
+	showEvaluation = true,
 	isLastQuestion,
+	showJustification = true,
 }: QuizQuestionProps) => {
 	const [selected, setSelected] = useState<string | null>(null)
 	const [justification, setJustification] = useState('')
 	const [showError, setShowError] = useState(false)
 	const justificationId = useId()
 
-	const isCorrect = selectedAnswer === question.answer
-	const canSubmit =
-		selected !== null && justification.length >= MIN_JUSTIFICATION_LENGTH
+	const correctAnswerButFailedJustification =
+		!isCorrect && selectedAnswer === question.answer
+	const canSubmit = showJustification
+		? selected !== null && justification.length >= MIN_JUSTIFICATION_LENGTH
+		: selected !== null
 
 	const handleSubmit = () => {
 		if (!canSubmit) {
@@ -52,7 +60,7 @@ export const QuizQuestion = ({
 			return
 		}
 		setShowError(false)
-		onSubmit(selected, justification)
+		if (selected) onSubmit(selected, justification)
 	}
 
 	const handleNext = () => {
@@ -79,9 +87,12 @@ export const QuizQuestion = ({
 								? selectedAnswer === option.label
 								: selected === option.label
 							const isCorrectOption = option.label === question.answer
-							const showCorrectHighlight = hasAnswered && isCorrectOption
+							const showCorrectHighlight =
+								showEvaluation && hasAnswered && isCorrectOption
 							const showIncorrectHighlight =
-								hasAnswered && isSelected && !isCorrectOption
+								showEvaluation && hasAnswered && isSelected && !isCorrectOption
+							const showNeutralHighlight =
+								!showEvaluation && hasAnswered && isSelected
 
 							return (
 								<button
@@ -93,7 +104,10 @@ export const QuizQuestion = ({
 										'flex items-start gap-3 p-4 rounded-lg border text-left transition-all',
 										'hover:border-primary/50 hover:bg-primary/5',
 										hasAnswered && 'cursor-default hover:bg-transparent',
-										!hasAnswered && isSelected && 'border-primary bg-primary/10',
+										!hasAnswered &&
+											isSelected &&
+											'border-primary bg-primary/10',
+										showNeutralHighlight && 'border-primary bg-primary/10',
 										showCorrectHighlight &&
 											'border-green-500 bg-green-50 dark:bg-green-950',
 										showIncorrectHighlight &&
@@ -106,6 +120,8 @@ export const QuizQuestion = ({
 											!hasAnswered && isSelected
 												? 'border-primary bg-primary text-primary-foreground'
 												: 'border-border',
+											showNeutralHighlight &&
+												'border-primary bg-primary text-primary-foreground',
 											showCorrectHighlight &&
 												'border-green-500 bg-green-500 text-white',
 											showIncorrectHighlight &&
@@ -122,7 +138,7 @@ export const QuizQuestion = ({
 				</div>
 			</div>
 
-			{!hasAnswered && (
+			{!hasAnswered && showJustification && (
 				<div className="p-6 rounded-lg border border-border bg-card">
 					<div className="flex flex-col gap-3">
 						<label htmlFor={justificationId} className="font-medium">
@@ -166,7 +182,18 @@ export const QuizQuestion = ({
 				</div>
 			)}
 
-			{hasAnswered && (
+			{hasAnswered && !showEvaluation && (
+				<output className="block p-6 rounded-lg border border-border bg-card">
+					<div className="flex items-center gap-3">
+						<div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+						<span className="text-muted-foreground">
+							Evaluating your answer...
+						</span>
+					</div>
+				</output>
+			)}
+
+			{hasAnswered && showEvaluation && (
 				<div
 					className={cn(
 						'p-6 rounded-lg border',
@@ -187,12 +214,19 @@ export const QuizQuestion = ({
 							>
 								{isCorrect ? 'Correct!' : 'Incorrect'}
 							</span>
-							{!isCorrect && (
+							{!isCorrect && !correctAnswerButFailedJustification && (
 								<span className="text-muted-foreground">
 									The correct answer is {question.answer}
 								</span>
 							)}
 						</div>
+
+						{correctAnswerButFailedJustification && (
+							<p className="text-sm text-amber-600 dark:text-amber-400">
+								Correct answer, but justification did not demonstrate
+								understanding
+							</p>
+						)}
 
 						<div className="flex flex-col gap-2">
 							<h4 className="font-medium">Expert Explanation</h4>

@@ -1,12 +1,7 @@
 import type { Quiz } from 'content-collections'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
-
-interface QuestionResult {
-	questionIndex: number
-	selectedAnswer: string
-	justification: string
-	isCorrect: boolean
-}
+import type { QuestionResult } from '@/types/quiz'
 
 interface Question {
 	question: string
@@ -21,17 +16,34 @@ interface QuizResultsProps {
 	results: QuestionResult[]
 	shuffledQuestions: Question[]
 	onRestart: () => void
+	verificationEnabled?: boolean
 }
+
+const VerdictBadge = ({ verdict }: { verdict: 'PASS' | 'FAIL' }) => (
+	<span
+		className={cn(
+			'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold',
+			verdict === 'PASS'
+				? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+				: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+		)}
+	>
+		{verdict}
+	</span>
+)
 
 export const QuizResults = ({
 	quiz,
 	results,
 	shuffledQuestions,
 	onRestart,
+	verificationEnabled = false,
 }: QuizResultsProps) => {
+	const [expandedIndex, setExpandedIndex] = useState<number | null>(null)
 	const correctCount = results.filter((r) => r.isCorrect).length
 	const totalQuestions = results.length
-	const percentage = totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0
+	const percentage =
+		totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : 0
 
 	const getScoreMessage = () => {
 		if (percentage >= 90) return 'Excellent!'
@@ -90,6 +102,11 @@ export const QuizResults = ({
 					const correctOption = question.options.find(
 						(o) => o.label === question.answer,
 					)
+					const correctAnswerButFailedJustification =
+						result.selectedAnswer === question.answer &&
+						!result.isCorrect &&
+						result.aiVerification?.status === 'complete'
+					const isExpanded = expandedIndex === index
 
 					return (
 						<div
@@ -113,8 +130,21 @@ export const QuizResults = ({
 									>
 										{index + 1}
 									</span>
-									<p className="font-medium">{question.question}</p>
+									<div className="flex-1">
+										<p className="font-medium">{question.question}</p>
+									</div>
+									{verificationEnabled &&
+										result.aiVerification?.status === 'complete' && (
+											<VerdictBadge verdict={result.aiVerification.verdict} />
+										)}
 								</div>
+
+								{correctAnswerButFailedJustification && (
+									<div className="ml-9 text-xs text-amber-600 dark:text-amber-400">
+										Correct answer, but justification did not pass AI
+										verification
+									</div>
+								)}
 
 								<div className="ml-9 flex flex-col gap-2 text-sm">
 									<div>
@@ -129,7 +159,7 @@ export const QuizResults = ({
 										</span>
 									</div>
 
-									{!result.isCorrect && (
+									{result.selectedAnswer !== question.answer && (
 										<div>
 											<span className="text-muted-foreground">
 												Correct answer:{' '}
@@ -140,12 +170,35 @@ export const QuizResults = ({
 										</div>
 									)}
 
-									<div className="mt-2 p-3 rounded bg-background/50">
-										<span className="text-muted-foreground text-xs block mb-1">
-											Your justification:
-										</span>
-										<p className="text-sm italic">{result.justification}</p>
-									</div>
+									{result.justification && (
+										<div className="mt-2 p-3 rounded bg-background/50">
+											<span className="text-muted-foreground text-xs block mb-1">
+												Your justification:
+											</span>
+											<p className="text-sm italic">{result.justification}</p>
+										</div>
+									)}
+
+									{verificationEnabled &&
+										result.aiVerification?.status === 'complete' &&
+										result.aiVerification.explanation && (
+											<div className="mt-1">
+												<button
+													type="button"
+													onClick={() =>
+														setExpandedIndex(isExpanded ? null : index)
+													}
+													className="text-xs text-primary hover:underline"
+												>
+													{isExpanded ? 'Hide AI feedback' : 'Show AI feedback'}
+												</button>
+												{isExpanded && (
+													<div className="mt-2 p-3 rounded bg-background/50 text-sm text-muted-foreground">
+														{result.aiVerification.explanation}
+													</div>
+												)}
+											</div>
+										)}
 								</div>
 							</div>
 						</div>

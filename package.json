@@ -20,6 +20,7 @@
     }
   },
   "dependencies": {
+    "@clerk/backend": "^2.29.5",
     "@clerk/clerk-react": "^5.49.0",
     "@content-collections/core": "^0.13.1",
     "@content-collections/vite": "^0.2.8",
