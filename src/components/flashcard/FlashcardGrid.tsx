@@ -33,6 +33,13 @@ export const FlashcardGrid = ({ group }: FlashcardGridProps) => {
 	const startSession = useMutation(api.flashcardSessions.start)
 	const revealCardMutation = useMutation(api.flashcardReveals.revealCard)
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: group.id triggers reset on navigation between groups
+	useEffect(() => {
+		setSessionId(null)
+		setRevealedCards(new Set())
+		setIsInitialized(false)
+	}, [group.id])
+
 	useEffect(() => {
 		if (isInitialized || isUserLoading) return
 
@@ -44,16 +51,22 @@ export const FlashcardGrid = ({ group }: FlashcardGridProps) => {
 		if (activeSession === undefined) return
 
 		const initSession = async () => {
-			if (activeSession) {
-				setSessionId(activeSession._id)
-			} else {
-				const newSessionId = await startSession({
-					groupId: group.id,
-					totalCards: group.cards.length,
-				})
-				setSessionId(newSessionId)
+			try {
+				if (activeSession) {
+					setSessionId(activeSession._id)
+				} else {
+					const newSessionId = await startSession({
+						groupId: group.id,
+						totalCards: group.cards.length,
+					})
+					setSessionId(newSessionId)
+				}
+			} catch (error) {
+				console.error('Failed to initialize flashcard session:', error)
+				// Fall back to local-only mode (no session persistence)
+			} finally {
+				setIsInitialized(true)
 			}
-			setIsInitialized(true)
 		}
 
 		initSession()

@@ -37,9 +37,9 @@ export const getActiveSession = query({
 			.withIndex('byUserIdAndGroupId', (q) =>
 				q.eq('userId', user._id).eq('groupId', args.groupId)
 			)
-			.unique()
+			.first()
 
-		return session ?? null
+		return session
 	},
 })
 

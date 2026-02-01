@@ -47,7 +47,14 @@ export const useConvexUser = () => {
 		}
 
 		syncUser()
-	}, [isLoaded, isSignedIn, clerkUser, upsertUser, hasSynced, isConvexAuthenticated])
+	}, [
+		isLoaded,
+		isSignedIn,
+		clerkUser,
+		upsertUser,
+		hasSynced,
+		isConvexAuthenticated,
+	])
 
 	useEffect(() => {
 		if (!isSignedIn) {
