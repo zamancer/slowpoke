@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as dailyActivity from "../dailyActivity.js";
 import type * as flashcardReveals from "../flashcardReveals.js";
 import type * as flashcardSessions from "../flashcardSessions.js";
 import type * as lib_auth from "../lib/auth.js";
@@ -22,6 +23,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  dailyActivity: typeof dailyActivity;
   flashcardReveals: typeof flashcardReveals;
   flashcardSessions: typeof flashcardSessions;
   "lib/auth": typeof lib_auth;
