@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface Card {
@@ -11,15 +10,26 @@ interface Card {
 interface FlashcardCardProps {
 	card: Card
 	index: number
+	isRevealed: boolean
+	onReveal: () => void
 }
 
-export const FlashcardCard = ({ card, index }: FlashcardCardProps) => {
-	const [isRevealed, setIsRevealed] = useState(false)
+export const FlashcardCard = ({
+	card,
+	index,
+	isRevealed,
+	onReveal,
+}: FlashcardCardProps) => {
+	const handleClick = () => {
+		if (!isRevealed) {
+			onReveal()
+		}
+	}
 
 	return (
 		<button
 			type="button"
-			onClick={() => setIsRevealed((prev) => !prev)}
+			onClick={handleClick}
 			className={cn(
 				'relative w-full min-h-48 p-4 rounded-lg border text-left transition-all duration-300',
 				'bg-card hover:shadow-md cursor-pointer',
