@@ -40,6 +40,10 @@ export const saveAnswer = mutation({
 			throw new ConvexError('Session is not in progress')
 		}
 
+		if (session.questionOrder[args.orderPosition] !== args.questionIndex) {
+			throw new ConvexError('Invalid answer mapping: orderPosition does not match questionIndex')
+		}
+
 		const existingAnswer = await ctx.db
 			.query('quizAnswers')
 			.withIndex('bySessionIdAndQuestionIndex', (q) =>

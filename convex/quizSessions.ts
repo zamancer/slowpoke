@@ -174,6 +174,10 @@ export const updateProgress = mutation({
 			throw new ConvexError('Session is not in progress')
 		}
 
+		if (args.currentQuestionIndex < 0 || args.currentQuestionIndex >= session.totalQuestions) {
+			throw new ConvexError('Invalid question index: out of bounds')
+		}
+
 		await ctx.db.patch(args.sessionId, {
 			currentQuestionIndex: args.currentQuestionIndex,
 		})
