@@ -1,6 +1,6 @@
 import { useUser } from '@clerk/clerk-react'
 import { useMutation, useQuery } from 'convex/react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../convex/_generated/api'
 
 /**
@@ -11,11 +11,14 @@ import { api } from '../../convex/_generated/api'
 export const useConvexUser = () => {
 	const { user: clerkUser, isSignedIn, isLoaded } = useUser()
 	const upsertUser = useMutation(api.users.upsertFromClerk)
-	const convexUser = useQuery(api.users.current, isSignedIn ? {} : 'skip')
-	const hasSynced = useRef(false)
+	const [hasSynced, setHasSynced] = useState(false)
+	const convexUser = useQuery(
+		api.users.current,
+		isSignedIn && hasSynced ? {} : 'skip',
+	)
 
 	useEffect(() => {
-		if (!isLoaded || !isSignedIn || !clerkUser || hasSynced.current) {
+		if (!isLoaded || !isSignedIn || !clerkUser || hasSynced) {
 			return
 		}
 
@@ -27,18 +30,18 @@ export const useConvexUser = () => {
 					name: clerkUser.fullName ?? undefined,
 					imageUrl: clerkUser.imageUrl,
 				})
-				hasSynced.current = true
+				setHasSynced(true)
 			} catch (error) {
 				console.error('Failed to sync user to Convex:', error)
 			}
 		}
 
 		syncUser()
-	}, [isLoaded, isSignedIn, clerkUser, upsertUser])
+	}, [isLoaded, isSignedIn, clerkUser, upsertUser, hasSynced])
 
 	useEffect(() => {
 		if (!isSignedIn) {
-			hasSynced.current = false
+			setHasSynced(false)
 		}
 	}, [isSignedIn])
 

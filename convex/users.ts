@@ -1,4 +1,4 @@
-import { v } from 'convex/values'
+import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { getAuthenticatedUser } from './lib/auth'
 
@@ -10,6 +10,14 @@ export const upsertFromClerk = mutation({
 		imageUrl: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
+		const identity = await ctx.auth.getUserIdentity()
+		if (!identity) {
+			throw new ConvexError('Not authenticated')
+		}
+		if (identity.subject !== args.clerkId) {
+			throw new ConvexError('Unauthorized: clerkId mismatch')
+		}
+
 		const existingUser = await ctx.db
 			.query('users')
 			.withIndex('byClerkId', (q) => q.eq('clerkId', args.clerkId))
