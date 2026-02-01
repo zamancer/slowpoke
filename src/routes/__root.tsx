@@ -1,5 +1,5 @@
 import { createRootRoute, HeadContent, Scripts } from '@tanstack/react-router'
-
+import { useConvexUser } from '../hooks/useConvexUser'
 import ClerkProvider from '../integrations/clerk/provider'
 import ConvexProvider from '../integrations/convex/provider'
 
@@ -17,6 +17,11 @@ export const Route = createRootRoute({
 	shellComponent: RootDocument,
 })
 
+const ConvexUserSync = ({ children }: { children: React.ReactNode }) => {
+	useConvexUser()
+	return <>{children}</>
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
 	return (
 		<html lang="en">
@@ -25,7 +30,9 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				<ClerkProvider>
-					<ConvexProvider>{children}</ConvexProvider>
+					<ConvexProvider>
+						<ConvexUserSync>{children}</ConvexUserSync>
+					</ConvexProvider>
 				</ClerkProvider>
 				<Scripts />
 			</body>
