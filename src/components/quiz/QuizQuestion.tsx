@@ -1,6 +1,6 @@
 'use client'
 
-import { useId, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { cn } from '@/lib/utils'
 
 interface Option {
@@ -21,8 +21,10 @@ interface QuizQuestionProps {
 	questionNumber: number
 	onSubmit: (selectedAnswer: string, justification: string) => void
 	onNext: () => void
+	onPrevious?: () => void
 	hasAnswered: boolean
 	selectedAnswer?: string
+	justification?: string
 	isCorrect?: boolean
 	showEvaluation?: boolean
 	isLastQuestion: boolean
@@ -36,20 +38,35 @@ export const QuizQuestion = ({
 	questionNumber,
 	onSubmit,
 	onNext,
+	onPrevious,
 	hasAnswered,
 	selectedAnswer,
+	justification: savedJustification,
 	isCorrect = false,
 	showEvaluation = true,
 	isLastQuestion,
 	showJustification = true,
 }: QuizQuestionProps) => {
-	const [selected, setSelected] = useState<string | null>(null)
-	const [justification, setJustification] = useState('')
+	const [selected, setSelected] = useState<string | null>(
+		selectedAnswer ?? null,
+	)
+	const [justification, setJustification] = useState(savedJustification ?? '')
 	const [showError, setShowError] = useState(false)
 	const justificationId = useId()
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: questionNumber triggers reset on navigation
+	useEffect(() => {
+		setSelected(selectedAnswer ?? null)
+		setJustification(savedJustification ?? '')
+		setShowError(false)
+	}, [questionNumber, selectedAnswer, savedJustification])
+
 	const correctAnswerButFailedJustification =
 		!isCorrect && selectedAnswer === question.answer
+
+	const hasChanges =
+		selected !== selectedAnswer || justification !== (savedJustification ?? '')
+
 	const canSubmit = showJustification
 		? selected !== null && justification.length >= MIN_JUSTIFICATION_LENGTH
 		: selected !== null
@@ -83,31 +100,31 @@ export const QuizQuestion = ({
 
 					<div className="flex flex-col gap-2 mt-2">
 						{question.options.map((option) => {
-							const isSelected = hasAnswered
-								? selectedAnswer === option.label
-								: selected === option.label
+							const isSelected = selected === option.label
+							const wasSelectedAnswer = selectedAnswer === option.label
 							const isCorrectOption = option.label === question.answer
 							const showCorrectHighlight =
 								showEvaluation && hasAnswered && isCorrectOption
 							const showIncorrectHighlight =
-								showEvaluation && hasAnswered && isSelected && !isCorrectOption
+								showEvaluation &&
+								hasAnswered &&
+								wasSelectedAnswer &&
+								!isCorrectOption
 							const showNeutralHighlight =
-								!showEvaluation && hasAnswered && isSelected
+								!showEvaluation && hasAnswered && wasSelectedAnswer
 
 							return (
 								<button
 									key={option.label}
 									type="button"
-									disabled={hasAnswered}
 									onClick={() => setSelected(option.label)}
 									className={cn(
 										'flex items-start gap-3 p-4 rounded-lg border text-left transition-all',
 										'hover:border-primary/50 hover:bg-primary/5',
-										hasAnswered && 'cursor-default hover:bg-transparent',
-										!hasAnswered &&
-											isSelected &&
-											'border-primary bg-primary/10',
-										showNeutralHighlight && 'border-primary bg-primary/10',
+										isSelected && 'border-primary bg-primary/10',
+										showNeutralHighlight &&
+											!isSelected &&
+											'border-primary/50 bg-primary/5',
 										showCorrectHighlight &&
 											'border-green-500 bg-green-50 dark:bg-green-950',
 										showIncorrectHighlight &&
@@ -117,11 +134,9 @@ export const QuizQuestion = ({
 									<span
 										className={cn(
 											'flex items-center justify-center w-7 h-7 rounded-full border text-sm font-medium shrink-0',
-											!hasAnswered && isSelected
+											isSelected
 												? 'border-primary bg-primary text-primary-foreground'
 												: 'border-border',
-											showNeutralHighlight &&
-												'border-primary bg-primary text-primary-foreground',
 											showCorrectHighlight &&
 												'border-green-500 bg-green-500 text-white',
 											showIncorrectHighlight &&
@@ -138,7 +153,7 @@ export const QuizQuestion = ({
 				</div>
 			</div>
 
-			{!hasAnswered && showJustification && (
+			{showJustification && (
 				<div className="p-6 rounded-lg border border-border bg-card">
 					<div className="flex flex-col gap-3">
 						<label htmlFor={justificationId} className="font-medium">
@@ -247,30 +262,44 @@ export const QuizQuestion = ({
 				</div>
 			)}
 
-			<div className="flex justify-end">
-				{!hasAnswered ? (
-					<button
-						type="button"
-						onClick={handleSubmit}
-						disabled={!canSubmit}
-						className={cn(
-							'px-6 py-2 rounded-lg font-medium transition-colors',
-							canSubmit
-								? 'bg-primary text-primary-foreground hover:bg-primary/90'
-								: 'bg-muted text-muted-foreground cursor-not-allowed',
-						)}
-					>
-						Submit Answer
-					</button>
-				) : (
-					<button
-						type="button"
-						onClick={handleNext}
-						className="px-6 py-2 rounded-lg font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-					>
-						{isLastQuestion ? 'See Results' : 'Next Question'}
-					</button>
-				)}
+			<div className="flex justify-between">
+				<div>
+					{onPrevious && (
+						<button
+							type="button"
+							onClick={onPrevious}
+							className="px-6 py-2 rounded-lg font-medium border border-border hover:bg-secondary transition-colors"
+						>
+							Previous
+						</button>
+					)}
+				</div>
+				<div className="flex gap-2">
+					{(!hasAnswered || hasChanges) && (
+						<button
+							type="button"
+							onClick={handleSubmit}
+							disabled={!canSubmit}
+							className={cn(
+								'px-6 py-2 rounded-lg font-medium transition-colors',
+								canSubmit
+									? 'bg-primary text-primary-foreground hover:bg-primary/90'
+									: 'bg-muted text-muted-foreground cursor-not-allowed',
+							)}
+						>
+							{hasAnswered ? 'Update Answer' : 'Submit Answer'}
+						</button>
+					)}
+					{hasAnswered && !hasChanges && (
+						<button
+							type="button"
+							onClick={handleNext}
+							className="px-6 py-2 rounded-lg font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+						>
+							{isLastQuestion ? 'See Results' : 'Next Question'}
+						</button>
+					)}
+				</div>
 			</div>
 		</div>
 	)
