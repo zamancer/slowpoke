@@ -12,6 +12,7 @@ export const useConvexUser = () => {
 	const { user: clerkUser, isSignedIn, isLoaded } = useUser()
 	const upsertUser = useMutation(api.users.upsertFromClerk)
 	const [hasSynced, setHasSynced] = useState(false)
+	const [syncError, setSyncError] = useState<Error | null>(null)
 	const convexUser = useQuery(
 		api.users.current,
 		isSignedIn && hasSynced ? {} : 'skip',
@@ -33,6 +34,7 @@ export const useConvexUser = () => {
 				setHasSynced(true)
 			} catch (error) {
 				console.error('Failed to sync user to Convex:', error)
+				setSyncError(error instanceof Error ? error : new Error(String(error)))
 			}
 		}
 
@@ -42,12 +44,15 @@ export const useConvexUser = () => {
 	useEffect(() => {
 		if (!isSignedIn) {
 			setHasSynced(false)
+			setSyncError(null)
 		}
 	}, [isSignedIn])
 
 	return {
 		user: convexUser,
-		isLoading: !isLoaded || (isSignedIn && convexUser === undefined),
+		isLoading:
+			!isLoaded || (isSignedIn && !syncError && convexUser === undefined),
 		isSignedIn,
+		syncError,
 	}
 }
