@@ -9,6 +9,8 @@
  */
 
 import type * as lib_auth from "../lib/auth.js";
+import type * as quizAnswers from "../quizAnswers.js";
+import type * as quizSessions from "../quizSessions.js";
 import type * as users from "../users.js";
 
 import type {
@@ -19,6 +21,8 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
+  quizAnswers: typeof quizAnswers;
+  quizSessions: typeof quizSessions;
   users: typeof users;
 }>;
 

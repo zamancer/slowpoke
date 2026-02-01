@@ -1,5 +1,5 @@
 import { useUser } from '@clerk/clerk-react'
-import { useMutation, useQuery } from 'convex/react'
+import { useConvexAuth, useMutation, useQuery } from 'convex/react'
 import { useEffect, useState } from 'react'
 import { api } from '../../convex/_generated/api'
 
@@ -10,6 +10,7 @@ import { api } from '../../convex/_generated/api'
  */
 export const useConvexUser = () => {
 	const { user: clerkUser, isSignedIn, isLoaded } = useUser()
+	const { isAuthenticated: isConvexAuthenticated } = useConvexAuth()
 	const upsertUser = useMutation(api.users.upsertFromClerk)
 	const [hasSynced, setHasSynced] = useState(false)
 	const [syncError, setSyncError] = useState<Error | null>(null)
@@ -19,7 +20,14 @@ export const useConvexUser = () => {
 	)
 
 	useEffect(() => {
-		if (!isLoaded || !isSignedIn || !clerkUser || hasSynced) {
+		// Wait for BOTH Clerk to load AND Convex auth to be ready
+		if (
+			!isLoaded ||
+			!isSignedIn ||
+			!clerkUser ||
+			!isConvexAuthenticated ||
+			hasSynced
+		) {
 			return
 		}
 
@@ -39,7 +47,7 @@ export const useConvexUser = () => {
 		}
 
 		syncUser()
-	}, [isLoaded, isSignedIn, clerkUser, upsertUser, hasSynced])
+	}, [isLoaded, isSignedIn, clerkUser, upsertUser, hasSynced, isConvexAuthenticated])
 
 	useEffect(() => {
 		if (!isSignedIn) {
@@ -51,7 +59,9 @@ export const useConvexUser = () => {
 	return {
 		user: convexUser,
 		isLoading:
-			!isLoaded || (isSignedIn && !syncError && convexUser === undefined),
+			!isLoaded ||
+			(isSignedIn && !isConvexAuthenticated) ||
+			(isSignedIn && !syncError && convexUser === undefined),
 		isSignedIn,
 		syncError,
 	}
