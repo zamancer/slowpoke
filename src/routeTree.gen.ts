@@ -14,6 +14,9 @@ import { Route as QuizzesIndexRouteImport } from './routes/quizzes/index'
 import { Route as FlashcardsIndexRouteImport } from './routes/flashcards/index'
 import { Route as QuizzesQuizIdRouteImport } from './routes/quizzes/$quizId'
 import { Route as FlashcardsGroupIdRouteImport } from './routes/flashcards/$groupId'
+import { Route as QuizzesHistoryIndexRouteImport } from './routes/quizzes/history/index'
+import { Route as FlashcardsHistoryIndexRouteImport } from './routes/flashcards/history/index'
+import { Route as QuizzesHistorySessionIdRouteImport } from './routes/quizzes/history/$sessionId'
 import { Route as ApiAiQuizVerifyRouteImport } from './routes/api/ai/quiz-verify'
 
 const IndexRoute = IndexRouteImport.update({
@@ -41,6 +44,21 @@ const FlashcardsGroupIdRoute = FlashcardsGroupIdRouteImport.update({
   path: '/flashcards/$groupId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const QuizzesHistoryIndexRoute = QuizzesHistoryIndexRouteImport.update({
+  id: '/quizzes/history/',
+  path: '/quizzes/history/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FlashcardsHistoryIndexRoute = FlashcardsHistoryIndexRouteImport.update({
+  id: '/flashcards/history/',
+  path: '/flashcards/history/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuizzesHistorySessionIdRoute = QuizzesHistorySessionIdRouteImport.update({
+  id: '/quizzes/history/$sessionId',
+  path: '/quizzes/history/$sessionId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAiQuizVerifyRoute = ApiAiQuizVerifyRouteImport.update({
   id: '/api/ai/quiz-verify',
   path: '/api/ai/quiz-verify',
@@ -54,6 +72,9 @@ export interface FileRoutesByFullPath {
   '/flashcards/': typeof FlashcardsIndexRoute
   '/quizzes/': typeof QuizzesIndexRoute
   '/api/ai/quiz-verify': typeof ApiAiQuizVerifyRoute
+  '/quizzes/history/$sessionId': typeof QuizzesHistorySessionIdRoute
+  '/flashcards/history/': typeof FlashcardsHistoryIndexRoute
+  '/quizzes/history/': typeof QuizzesHistoryIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +83,9 @@ export interface FileRoutesByTo {
   '/flashcards': typeof FlashcardsIndexRoute
   '/quizzes': typeof QuizzesIndexRoute
   '/api/ai/quiz-verify': typeof ApiAiQuizVerifyRoute
+  '/quizzes/history/$sessionId': typeof QuizzesHistorySessionIdRoute
+  '/flashcards/history': typeof FlashcardsHistoryIndexRoute
+  '/quizzes/history': typeof QuizzesHistoryIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,6 +95,9 @@ export interface FileRoutesById {
   '/flashcards/': typeof FlashcardsIndexRoute
   '/quizzes/': typeof QuizzesIndexRoute
   '/api/ai/quiz-verify': typeof ApiAiQuizVerifyRoute
+  '/quizzes/history/$sessionId': typeof QuizzesHistorySessionIdRoute
+  '/flashcards/history/': typeof FlashcardsHistoryIndexRoute
+  '/quizzes/history/': typeof QuizzesHistoryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -81,6 +108,9 @@ export interface FileRouteTypes {
     | '/flashcards/'
     | '/quizzes/'
     | '/api/ai/quiz-verify'
+    | '/quizzes/history/$sessionId'
+    | '/flashcards/history/'
+    | '/quizzes/history/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -89,6 +119,9 @@ export interface FileRouteTypes {
     | '/flashcards'
     | '/quizzes'
     | '/api/ai/quiz-verify'
+    | '/quizzes/history/$sessionId'
+    | '/flashcards/history'
+    | '/quizzes/history'
   id:
     | '__root__'
     | '/'
@@ -97,6 +130,9 @@ export interface FileRouteTypes {
     | '/flashcards/'
     | '/quizzes/'
     | '/api/ai/quiz-verify'
+    | '/quizzes/history/$sessionId'
+    | '/flashcards/history/'
+    | '/quizzes/history/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -106,6 +142,9 @@ export interface RootRouteChildren {
   FlashcardsIndexRoute: typeof FlashcardsIndexRoute
   QuizzesIndexRoute: typeof QuizzesIndexRoute
   ApiAiQuizVerifyRoute: typeof ApiAiQuizVerifyRoute
+  QuizzesHistorySessionIdRoute: typeof QuizzesHistorySessionIdRoute
+  FlashcardsHistoryIndexRoute: typeof FlashcardsHistoryIndexRoute
+  QuizzesHistoryIndexRoute: typeof QuizzesHistoryIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -145,6 +184,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FlashcardsGroupIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/quizzes/history/': {
+      id: '/quizzes/history/'
+      path: '/quizzes/history'
+      fullPath: '/quizzes/history/'
+      preLoaderRoute: typeof QuizzesHistoryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/flashcards/history/': {
+      id: '/flashcards/history/'
+      path: '/flashcards/history'
+      fullPath: '/flashcards/history/'
+      preLoaderRoute: typeof FlashcardsHistoryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quizzes/history/$sessionId': {
+      id: '/quizzes/history/$sessionId'
+      path: '/quizzes/history/$sessionId'
+      fullPath: '/quizzes/history/$sessionId'
+      preLoaderRoute: typeof QuizzesHistorySessionIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ai/quiz-verify': {
       id: '/api/ai/quiz-verify'
       path: '/api/ai/quiz-verify'
@@ -162,6 +222,9 @@ const rootRouteChildren: RootRouteChildren = {
   FlashcardsIndexRoute: FlashcardsIndexRoute,
   QuizzesIndexRoute: QuizzesIndexRoute,
   ApiAiQuizVerifyRoute: ApiAiQuizVerifyRoute,
+  QuizzesHistorySessionIdRoute: QuizzesHistorySessionIdRoute,
+  FlashcardsHistoryIndexRoute: FlashcardsHistoryIndexRoute,
+  QuizzesHistoryIndexRoute: QuizzesHistoryIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

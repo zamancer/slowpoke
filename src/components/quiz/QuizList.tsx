@@ -26,7 +26,15 @@ export const QuizList = ({ quizzes }: QuizListProps) => {
 	return (
 		<div className="flex flex-col gap-6">
 			<div className="flex flex-col gap-2">
-				<h1 className="text-2xl font-bold">Quizzes</h1>
+				<div className="flex items-center justify-between">
+					<h1 className="text-2xl font-bold">Quizzes</h1>
+					<Link
+						to="/quizzes/history"
+						className="text-sm text-muted-foreground hover:text-primary transition-colors"
+					>
+						View History →
+					</Link>
+				</div>
 				<p className="text-muted-foreground">
 					Test your pattern recognition skills. Each quiz requires you to
 					justify your answers.
