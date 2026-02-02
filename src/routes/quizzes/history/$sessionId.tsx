@@ -123,16 +123,6 @@ function QuizSessionReviewPage() {
 		)
 	}
 
-	if (session === undefined || answers === undefined) {
-		return (
-			<div className="container mx-auto py-8 px-4">
-				<div className="flex items-center justify-center min-h-[200px]">
-					<div className="text-muted-foreground">Loading session...</div>
-				</div>
-			</div>
-		)
-	}
-
 	if (session === null) {
 		return (
 			<div className="container mx-auto py-8 px-4 text-center">
@@ -144,6 +134,16 @@ function QuizSessionReviewPage() {
 				<Link to="/quizzes/history" className="text-primary hover:underline">
 					← Back to history
 				</Link>
+			</div>
+		)
+	}
+
+	if (session === undefined || answers === undefined) {
+		return (
+			<div className="container mx-auto py-8 px-4">
+				<div className="flex items-center justify-center min-h-[200px]">
+					<div className="text-muted-foreground">Loading session...</div>
+				</div>
 			</div>
 		)
 	}
