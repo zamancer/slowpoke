@@ -17,7 +17,15 @@ export const FlashcardGroupList = ({ groups }: FlashcardGroupListProps) => {
 	return (
 		<div className="flex flex-col gap-6">
 			<div className="flex flex-col gap-2">
-				<h1 className="text-2xl font-bold">Flashcard Groups</h1>
+				<div className="flex items-center justify-between">
+					<h1 className="text-2xl font-bold">Flashcard Groups</h1>
+					<Link
+						to="/flashcards/history"
+						className="text-sm text-muted-foreground hover:text-primary transition-colors"
+					>
+						View History →
+					</Link>
+				</div>
 				<p className="text-muted-foreground">
 					Select a group to study. Each group contains 6 related flashcards.
 				</p>

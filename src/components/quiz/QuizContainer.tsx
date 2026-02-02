@@ -82,7 +82,7 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 
 	const activeSession = useQuery(
 		api.quizSessions.getActiveSession,
-		convexUser ? { quizId: quiz._meta.path } : 'skip',
+		convexUser ? { quizId: quiz.id } : 'skip',
 	)
 	const effectiveSessionId = pendingSession?.id ?? sessionId
 	const sessionAnswers = useQuery(
@@ -141,7 +141,7 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 			const order = shuffleArray(quiz.questions.map((_, i) => i))
 			setQuestionOrder(order)
 			startSession({
-				quizId: quiz._meta.path,
+				quizId: quiz.id,
 				questionOrder: order,
 				totalQuestions: quiz.questions.length,
 				verificationEnabled,
@@ -159,7 +159,7 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 				const order = shuffleArray(quiz.questions.map((_, i) => i))
 				setQuestionOrder(order)
 				startSession({
-					quizId: quiz._meta.path,
+					quizId: quiz.id,
 					questionOrder: order,
 					totalQuestions: quiz.questions.length,
 					verificationEnabled,
@@ -235,7 +235,7 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 		const order = shuffleArray(quiz.questions.map((_, i) => i))
 		setQuestionOrder(order)
 		const id = await startSession({
-			quizId: quiz._meta.path,
+			quizId: quiz.id,
 			questionOrder: order,
 			totalQuestions: quiz.questions.length,
 			verificationEnabled,
@@ -466,7 +466,7 @@ export const QuizContainer = ({ quiz }: QuizContainerProps) => {
 		setQuestionOrder(order)
 		if (convexUser) {
 			const id = await startSession({
-				quizId: quiz._meta.path,
+				quizId: quiz.id,
 				questionOrder: order,
 				totalQuestions: quiz.questions.length,
 				verificationEnabled,
