@@ -74,6 +74,7 @@ export const getSession = query({
 export const complete = mutation({
 	args: {
 		sessionId: v.id('quizSessions'),
+		localDate: v.optional(v.string()), // YYYY-MM-DD from client's timezone
 	},
 	handler: async (ctx, args) => {
 		const user = await getAuthenticatedUser(ctx)
@@ -109,7 +110,8 @@ export const complete = mutation({
 			completedAt: Date.now(),
 		})
 
-		const today = new Date().toISOString().split('T')[0]
+		// Use client's local date if provided, fall back to UTC
+		const today = args.localDate ?? new Date().toISOString().split('T')[0]
 		const existingActivity = await ctx.db
 			.query('dailyActivity')
 			.withIndex('byUserIdAndDate', (q) =>

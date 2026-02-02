@@ -1,6 +1,7 @@
 import { v } from 'convex/values'
 import { internalMutation, query } from './_generated/server'
 import { getAuthenticatedUser } from './lib/auth'
+import { getDateRange, getUtcTodayStr, getPreviousDateStr } from './lib/dateHelpers'
 
 export const recordQuizCompletion = internalMutation({
 	args: {
@@ -28,8 +29,10 @@ export const recordQuizCompletion = internalMutation({
 })
 
 export const getStreak = query({
-	args: {},
-	handler: async (ctx) => {
+	args: {
+		clientToday: v.optional(v.string()), // YYYY-MM-DD from client's timezone
+	},
+	handler: async (ctx, args) => {
 		const user = await getAuthenticatedUser(ctx)
 
 		const activities = await ctx.db
@@ -49,19 +52,14 @@ export const getStreak = query({
 			return 0
 		}
 
-		const today = new Date()
+		// Use client's local date if provided, fall back to UTC
+		const todayStr = args.clientToday ?? getUtcTodayStr()
 		let streak = 0
-		let currentDate = new Date(today)
+		let currentDateStr = todayStr
 
-		while (true) {
-			const dateStr = currentDate.toISOString().split('T')[0]
-
-			if (completedDates.has(dateStr)) {
-				streak++
-				currentDate.setDate(currentDate.getDate() - 1)
-			} else {
-				break
-			}
+		while (completedDates.has(currentDateStr)) {
+			streak++
+			currentDateStr = getPreviousDateStr(currentDateStr)
 		}
 
 		return streak
@@ -71,6 +69,7 @@ export const getStreak = query({
 export const getRecentActivity = query({
 	args: {
 		days: v.optional(v.number()),
+		clientToday: v.optional(v.string()), // YYYY-MM-DD from client's timezone
 	},
 	handler: async (ctx, args) => {
 		const user = await getAuthenticatedUser(ctx)
@@ -83,20 +82,13 @@ export const getRecentActivity = query({
 
 		const activityMap = new Map(activities.map((a) => [a.date, a.quizCompleted]))
 
-		const result: Array<{ date: string; quizCompleted: boolean }> = []
-		const today = new Date()
+		// Use client's local date if provided, fall back to UTC
+		const todayStr = args.clientToday ?? getUtcTodayStr()
+		const dateRange = getDateRange(todayStr, numDays)
 
-		for (let i = 0; i < numDays; i++) {
-			const date = new Date(today)
-			date.setDate(date.getDate() - i)
-			const dateStr = date.toISOString().split('T')[0]
-
-			result.push({
-				date: dateStr,
-				quizCompleted: activityMap.get(dateStr) ?? false,
-			})
-		}
-
-		return result
+		return dateRange.map((dateStr) => ({
+			date: dateStr,
+			quizCompleted: activityMap.get(dateStr) ?? false,
+		}))
 	},
 })
