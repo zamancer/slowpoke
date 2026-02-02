@@ -354,7 +354,7 @@ function QuizSessionReviewPage() {
 																	: 'text-red-600 dark:text-red-400'
 															)}
 														>
-															{isCorrect ? 'Your answer' : 'Your answer'}
+															Your answer
 														</span>
 													)}
 													{isCorrectAnswer && !isSelected && (

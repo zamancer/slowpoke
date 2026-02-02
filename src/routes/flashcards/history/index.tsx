@@ -170,7 +170,7 @@ function FlashcardHistoryPage() {
 												isComplete ? 'bg-green-500' : 'bg-primary'
 											)}
 											style={{
-												width: `${(session.revealedCount / session.totalCards) * 100}%`,
+												width: `${session.totalCards > 0 ? (session.revealedCount / session.totalCards) * 100 : 0}%`,
 											}}
 										/>
 									</div>
