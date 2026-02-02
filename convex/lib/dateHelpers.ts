@@ -3,10 +3,35 @@
  * Used for timezone-aware daily activity tracking.
  */
 
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+/**
+ * Validate that a string is a valid YYYY-MM-DD date.
+ * Throws if the format is invalid or if the date values are out of range.
+ */
+export const validateDateStr = (dateStr: string): void => {
+	if (!DATE_PATTERN.test(dateStr)) {
+		throw new Error(`Invalid date format: ${dateStr}. Expected YYYY-MM-DD`)
+	}
+
+	const [year, month, day] = dateStr.split('-').map(Number)
+	const date = new Date(Date.UTC(year, month - 1, day))
+
+	// Verify the date wasn't normalized (e.g., month 13 becoming month 1 of next year)
+	if (
+		date.getUTCFullYear() !== year ||
+		date.getUTCMonth() + 1 !== month ||
+		date.getUTCDate() !== day
+	) {
+		throw new Error(`Invalid date values: ${dateStr}`)
+	}
+}
+
 /**
  * Get the previous date string given a YYYY-MM-DD date.
  */
 export const getPreviousDateStr = (dateStr: string): string => {
+	validateDateStr(dateStr)
 	const [year, month, day] = dateStr.split('-').map(Number)
 	const date = new Date(Date.UTC(year, month - 1, day))
 	date.setUTCDate(date.getUTCDate() - 1)

@@ -1,7 +1,12 @@
 import { v } from 'convex/values'
 import { internalMutation, query } from './_generated/server'
 import { getAuthenticatedUser } from './lib/auth'
-import { getDateRange, getUtcTodayStr, getPreviousDateStr } from './lib/dateHelpers'
+import {
+	getDateRange,
+	getUtcTodayStr,
+	getPreviousDateStr,
+	validateDateStr,
+} from './lib/dateHelpers'
 
 export const recordQuizCompletion = internalMutation({
 	args: {
@@ -34,6 +39,11 @@ export const getStreak = query({
 	},
 	handler: async (ctx, args) => {
 		const user = await getAuthenticatedUser(ctx)
+
+		// Validate client date if provided
+		if (args.clientToday) {
+			validateDateStr(args.clientToday)
+		}
 
 		const activities = await ctx.db
 			.query('dailyActivity')
@@ -74,6 +84,11 @@ export const getRecentActivity = query({
 	handler: async (ctx, args) => {
 		const user = await getAuthenticatedUser(ctx)
 		const numDays = args.days ?? 30
+
+		// Validate client date if provided
+		if (args.clientToday) {
+			validateDateStr(args.clientToday)
+		}
 
 		const activities = await ctx.db
 			.query('dailyActivity')

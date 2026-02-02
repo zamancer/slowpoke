@@ -12,6 +12,7 @@ import type * as dailyActivity from "../dailyActivity.js";
 import type * as flashcardReveals from "../flashcardReveals.js";
 import type * as flashcardSessions from "../flashcardSessions.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_dateHelpers from "../lib/dateHelpers.js";
 import type * as quizAnswers from "../quizAnswers.js";
 import type * as quizSessions from "../quizSessions.js";
 import type * as users from "../users.js";
@@ -27,6 +28,7 @@ declare const fullApi: ApiFromModules<{
   flashcardReveals: typeof flashcardReveals;
   flashcardSessions: typeof flashcardSessions;
   "lib/auth": typeof lib_auth;
+  "lib/dateHelpers": typeof lib_dateHelpers;
   quizAnswers: typeof quizAnswers;
   quizSessions: typeof quizSessions;
   users: typeof users;

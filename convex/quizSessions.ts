@@ -1,6 +1,7 @@
 import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { getAuthenticatedUser, getOptionalUser } from './lib/auth'
+import { validateDateStr } from './lib/dateHelpers'
 
 export const start = mutation({
 	args: {
@@ -110,7 +111,10 @@ export const complete = mutation({
 			completedAt: Date.now(),
 		})
 
-		// Use client's local date if provided, fall back to UTC
+		// Validate and use client's local date if provided, fall back to UTC
+		if (args.localDate) {
+			validateDateStr(args.localDate)
+		}
 		const today = args.localDate ?? new Date().toISOString().split('T')[0]
 		const existingActivity = await ctx.db
 			.query('dailyActivity')
