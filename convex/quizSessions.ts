@@ -1,6 +1,7 @@
 import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { getAuthenticatedUser, getOptionalUser } from './lib/auth'
+import { validateDateStr } from './lib/dateHelpers'
 
 export const start = mutation({
 	args: {
@@ -74,6 +75,7 @@ export const getSession = query({
 export const complete = mutation({
 	args: {
 		sessionId: v.id('quizSessions'),
+		localDate: v.optional(v.string()), // YYYY-MM-DD from client's timezone
 	},
 	handler: async (ctx, args) => {
 		const user = await getAuthenticatedUser(ctx)
@@ -109,7 +111,11 @@ export const complete = mutation({
 			completedAt: Date.now(),
 		})
 
-		const today = new Date().toISOString().split('T')[0]
+		// Validate and use client's local date if provided, fall back to UTC
+		if (args.localDate) {
+			validateDateStr(args.localDate)
+		}
+		const today = args.localDate ?? new Date().toISOString().split('T')[0]
 		const existingActivity = await ctx.db
 			.query('dailyActivity')
 			.withIndex('byUserIdAndDate', (q) =>
