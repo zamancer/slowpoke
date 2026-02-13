@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from 'convex/react'
 import { allFlashcardGroups } from 'content-collections'
-import { api } from '../../../../convex/_generated/api'
+import { useQuery } from 'convex/react'
 import { useConvexUser } from '@/hooks/useConvexUser'
 import { cn } from '@/lib/utils'
+import { api } from '../../../../convex/_generated/api'
 
 export const Route = createFileRoute('/flashcards/history/')({
 	component: FlashcardHistoryPage,
@@ -43,7 +43,7 @@ function FlashcardHistoryPage() {
 	const { isSignedIn, isLoading: isUserLoading } = useConvexUser()
 	const sessions = useQuery(
 		api.flashcardSessions.listByUser,
-		isSignedIn ? {} : 'skip'
+		isSignedIn ? {} : 'skip',
 	)
 
 	if (isUserLoading) {
@@ -122,7 +122,7 @@ function FlashcardHistoryPage() {
 					<div className="flex flex-col gap-3">
 						{sessions.map((session) => {
 							const group = allFlashcardGroups.find(
-								(g) => g.id === session.groupId
+								(g) => g.id === session.groupId,
 							)
 							const groupTitle = group?.title ?? 'Unknown Group'
 							const isComplete = session.revealedCount >= session.totalCards
@@ -132,7 +132,7 @@ function FlashcardHistoryPage() {
 									key={session._id}
 									className={cn(
 										'flex flex-col gap-3 p-5 rounded-lg border border-border',
-										'bg-card hover:shadow-md hover:border-primary/30 transition-all'
+										'bg-card hover:shadow-md hover:border-primary/30 transition-all',
 									)}
 								>
 									<div className="flex items-start justify-between gap-4">
@@ -150,8 +150,8 @@ function FlashcardHistoryPage() {
 													'text-xl font-bold',
 													getProgressColor(
 														session.revealedCount,
-														session.totalCards
-													)
+														session.totalCards,
+													),
 												)}
 											>
 												{session.revealedCount}/{session.totalCards}
@@ -167,7 +167,7 @@ function FlashcardHistoryPage() {
 										<div
 											className={cn(
 												'h-full rounded-full transition-all',
-												isComplete ? 'bg-green-500' : 'bg-primary'
+												isComplete ? 'bg-green-500' : 'bg-primary',
 											)}
 											style={{
 												width: `${session.totalCards > 0 ? (session.revealedCount / session.totalCards) * 100 : 0}%`,
