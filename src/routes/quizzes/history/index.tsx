@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from 'convex/react'
 import { allQuizzes } from 'content-collections'
-import { api } from '../../../../convex/_generated/api'
+import { useQuery } from 'convex/react'
 import { useConvexUser } from '@/hooks/useConvexUser'
 import { cn } from '@/lib/utils'
+import { api } from '../../../../convex/_generated/api'
 
 export const Route = createFileRoute('/quizzes/history/')({
 	component: QuizHistoryPage,
@@ -43,7 +43,7 @@ function QuizHistoryPage() {
 	const { isSignedIn, isLoading: isUserLoading } = useConvexUser()
 	const sessions = useQuery(
 		api.quizSessions.listByUser,
-		isSignedIn ? {} : 'skip'
+		isSignedIn ? {} : 'skip',
 	)
 
 	if (isUserLoading) {
@@ -129,7 +129,7 @@ function QuizHistoryPage() {
 									key={session._id}
 									className={cn(
 										'flex flex-col gap-3 p-5 rounded-lg border border-border',
-										'bg-card hover:shadow-md hover:border-primary/30 transition-all'
+										'bg-card hover:shadow-md hover:border-primary/30 transition-all',
 									)}
 								>
 									<div className="flex items-start justify-between gap-4">
@@ -149,8 +149,8 @@ function QuizHistoryPage() {
 													'text-xl font-bold',
 													getScoreColor(
 														session.correctCount,
-														session.totalQuestions
-													)
+														session.totalQuestions,
+													),
 												)}
 											>
 												{session.correctCount}/{session.totalQuestions}

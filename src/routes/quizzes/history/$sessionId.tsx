@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from 'convex/react'
 import { allQuizzes } from 'content-collections'
-import type { Id } from '../../../../convex/_generated/dataModel'
-import { api } from '../../../../convex/_generated/api'
+import { useQuery } from 'convex/react'
 import { useConvexUser } from '@/hooks/useConvexUser'
 import { cn } from '@/lib/utils'
+import { api } from '../../../../convex/_generated/api'
+import type { Id } from '../../../../convex/_generated/dataModel'
 
 export const Route = createFileRoute('/quizzes/history/$sessionId')({
 	component: QuizSessionReviewPage,
@@ -68,7 +68,7 @@ const VerdictBadge = ({
 				'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold',
 				verdict === 'PASS'
 					? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-					: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+					: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
 			)}
 		>
 			{verdict}
@@ -82,14 +82,14 @@ function QuizSessionReviewPage() {
 
 	const session = useQuery(
 		api.quizSessions.getSession,
-		isSignedIn ? { sessionId: sessionId as Id<'quizSessions'> } : 'skip'
+		isSignedIn ? { sessionId: sessionId as Id<'quizSessions'> } : 'skip',
 	)
 
 	const answers = useQuery(
 		api.quizAnswers.listBySession,
 		isSignedIn && session
 			? { sessionId: sessionId as Id<'quizSessions'> }
-			: 'skip'
+			: 'skip',
 	)
 
 	if (isUserLoading) {
@@ -154,7 +154,7 @@ function QuizSessionReviewPage() {
 
 	// Build a map of answers by questionIndex for quick lookup
 	const answersByQuestionIndex = new Map(
-		answers.map((a) => [a.questionIndex, a])
+		answers.map((a) => [a.questionIndex, a]),
 	)
 
 	// Get questions in the order they were presented (using questionOrder)
@@ -192,10 +192,7 @@ function QuizSessionReviewPage() {
 								<span
 									className={cn(
 										'text-3xl font-bold',
-										getScoreColor(
-											session.correctCount,
-											session.totalQuestions
-										)
+										getScoreColor(session.correctCount, session.totalQuestions),
 									)}
 								>
 									{session.correctCount}/{session.totalQuestions}
@@ -203,7 +200,7 @@ function QuizSessionReviewPage() {
 								<span className="text-sm font-medium">
 									{getScoreMessage(
 										session.correctCount,
-										session.totalQuestions
+										session.totalQuestions,
 									)}
 								</span>
 								{session.verificationEnabled && (
@@ -263,7 +260,7 @@ function QuizSessionReviewPage() {
 									'p-5 rounded-lg border',
 									isCorrect
 										? 'border-green-500/50 bg-green-50/50 dark:bg-green-950/30'
-										: 'border-red-500/50 bg-red-50/50 dark:bg-red-950/30'
+										: 'border-red-500/50 bg-red-50/50 dark:bg-red-950/30',
 								)}
 							>
 								<div className="flex flex-col gap-4">
@@ -274,7 +271,7 @@ function QuizSessionReviewPage() {
 												'flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium shrink-0',
 												isCorrect
 													? 'bg-green-500 text-white'
-													: 'bg-red-500 text-white'
+													: 'bg-red-500 text-white',
 											)}
 										>
 											{orderIndex + 1}
@@ -321,26 +318,28 @@ function QuizSessionReviewPage() {
 															'bg-red-100/50 dark:bg-red-900/30',
 														!isSelected &&
 															!isCorrectAnswer &&
-															'bg-background/50'
+															'bg-background/50',
 													)}
 												>
 													<span
 														className={cn(
 															'font-medium shrink-0',
-															showAsCorrect && 'text-green-600 dark:text-green-400',
+															showAsCorrect &&
+																'text-green-600 dark:text-green-400',
 															showAsIncorrect &&
 																!isCorrectAnswer &&
-																'text-red-600 dark:text-red-400'
+																'text-red-600 dark:text-red-400',
 														)}
 													>
 														{option.label}.
 													</span>
 													<span
 														className={cn(
-															showAsCorrect && 'text-green-700 dark:text-green-300',
+															showAsCorrect &&
+																'text-green-700 dark:text-green-300',
 															showAsIncorrect &&
 																!isCorrectAnswer &&
-																'text-red-700 dark:text-red-300'
+																'text-red-700 dark:text-red-300',
 														)}
 													>
 														{option.text}
@@ -351,7 +350,7 @@ function QuizSessionReviewPage() {
 																'ml-auto text-xs font-medium shrink-0',
 																isCorrect
 																	? 'text-green-600 dark:text-green-400'
-																	: 'text-red-600 dark:text-red-400'
+																	: 'text-red-600 dark:text-red-400',
 															)}
 														>
 															Your answer
