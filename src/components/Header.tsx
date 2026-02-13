@@ -21,6 +21,9 @@ export default function Header() {
 				<h1 className="ml-4 text-xl font-semibold">
 					<Link to="/">Slowpoke</Link>
 				</h1>
+				<div className="ml-auto">
+					<ClerkHeader />
+				</div>
 			</header>
 
 			<aside
@@ -78,10 +81,6 @@ export default function Header() {
 						<span className="font-medium">Flashcards</span>
 					</Link>
 				</nav>
-
-				<div className="p-4 border-t border-gray-700 bg-gray-800 flex flex-col gap-2">
-					<ClerkHeader />
-				</div>
 			</aside>
 		</>
 	)
