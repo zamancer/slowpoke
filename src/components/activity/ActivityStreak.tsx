@@ -1,6 +1,6 @@
 import { useQuery } from 'convex/react'
 import { Flame } from 'lucide-react'
-import { useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../../convex/_generated/api'
 import { useConvexUser } from '@/hooks/useConvexUser'
 import { getLocalTodayStr } from '@/lib/common/date-common-fns'
@@ -17,7 +17,16 @@ const getDayLabel = (dateStr: string) => {
 
 export const ActivityStreak = () => {
 	const { isSignedIn, isLoading: isUserLoading } = useConvexUser()
-	const clientToday = useMemo(() => getLocalTodayStr(), [])
+	const [clientToday, setClientToday] = useState(() => getLocalTodayStr())
+
+	useEffect(() => {
+		const onFocus = () => {
+			const current = getLocalTodayStr()
+			setClientToday((prev) => (prev !== current ? current : prev))
+		}
+		window.addEventListener('focus', onFocus)
+		return () => window.removeEventListener('focus', onFocus)
+	}, [])
 
 	const streak = useQuery(
 		api.dailyActivity.getStreak,
