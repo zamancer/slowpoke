@@ -1,6 +1,7 @@
-import { SignedOut, SignInButton } from '@clerk/clerk-react'
+import { SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { BookOpen, ListChecks } from 'lucide-react'
+import { ActivityStreak } from '@/components/activity/ActivityStreak'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 
@@ -30,6 +31,10 @@ function Home() {
 						</SignInButton>
 					</div>
 				</SignedOut>
+
+				<SignedIn>
+					<ActivityStreak />
+				</SignedIn>
 
 				<div className="grid gap-4 sm:grid-cols-2">
 					<Link to="/quizzes" className={cn(cardClass, 'block')}>

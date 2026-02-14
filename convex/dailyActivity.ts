@@ -45,29 +45,21 @@ export const getStreak = query({
 			validateDateStr(args.clientToday)
 		}
 
-		const activities = await ctx.db
-			.query('dailyActivity')
-			.withIndex('byUserId', (q) => q.eq('userId', user._id))
-			.collect()
-
-		if (activities.length === 0) {
-			return 0
-		}
-
-		const completedDates = new Set(
-			activities.filter((a) => a.quizCompleted).map((a) => a.date)
-		)
-
-		if (completedDates.size === 0) {
-			return 0
-		}
-
 		// Use client's local date if provided, fall back to UTC
 		const todayStr = args.clientToday ?? getUtcTodayStr()
 		let streak = 0
 		let currentDateStr = todayStr
 
-		while (completedDates.has(currentDateStr)) {
+		// Walk backwards one day at a time using point lookups
+		while (true) {
+			const activity = await ctx.db
+				.query('dailyActivity')
+				.withIndex('byUserIdAndDate', (q) =>
+					q.eq('userId', user._id).eq('date', currentDateStr)
+				)
+				.unique()
+
+			if (!activity?.quizCompleted) break
 			streak++
 			currentDateStr = getPreviousDateStr(currentDateStr)
 		}
@@ -83,23 +75,27 @@ export const getRecentActivity = query({
 	},
 	handler: async (ctx, args) => {
 		const user = await getAuthenticatedUser(ctx)
-		const numDays = args.days ?? 30
+		const numDays = Math.min(args.days ?? 30, 365)
 
 		// Validate client date if provided
 		if (args.clientToday) {
 			validateDateStr(args.clientToday)
 		}
 
-		const activities = await ctx.db
-			.query('dailyActivity')
-			.withIndex('byUserId', (q) => q.eq('userId', user._id))
-			.collect()
-
-		const activityMap = new Map(activities.map((a) => [a.date, a.quizCompleted]))
-
 		// Use client's local date if provided, fall back to UTC
 		const todayStr = args.clientToday ?? getUtcTodayStr()
 		const dateRange = getDateRange(todayStr, numDays)
+		const startDate = dateRange[dateRange.length - 1]
+
+		// Query only the date range we need using the compound index
+		const activities = await ctx.db
+			.query('dailyActivity')
+			.withIndex('byUserIdAndDate', (q) =>
+				q.eq('userId', user._id).gte('date', startDate).lte('date', todayStr)
+			)
+			.collect()
+
+		const activityMap = new Map(activities.map((a) => [a.date, a.quizCompleted]))
 
 		return dateRange.map((dateStr) => ({
 			date: dateStr,
