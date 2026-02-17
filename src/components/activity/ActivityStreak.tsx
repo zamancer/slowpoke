@@ -1,10 +1,10 @@
 import { useQuery } from 'convex/react'
 import { Flame } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { api } from '../../../convex/_generated/api'
 import { useConvexUser } from '@/hooks/useConvexUser'
 import { getLocalTodayStr } from '@/lib/common/date-common-fns'
 import { cn } from '@/lib/utils'
+import { api } from '../../../convex/_generated/api'
 
 const DAY_LABELS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
 const SKELETON_KEYS = Array.from({ length: 14 }, (_, i) => `s${i}`)
