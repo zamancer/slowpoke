@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as QuizzesIndexRouteImport } from './routes/quizzes/index'
+import { Route as GenerateIndexRouteImport } from './routes/generate/index'
 import { Route as FlashcardsIndexRouteImport } from './routes/flashcards/index'
 import { Route as QuizzesQuizIdRouteImport } from './routes/quizzes/$quizId'
 import { Route as FlashcardsGroupIdRouteImport } from './routes/flashcards/$groupId'
@@ -18,6 +19,8 @@ import { Route as QuizzesHistoryIndexRouteImport } from './routes/quizzes/histor
 import { Route as FlashcardsHistoryIndexRouteImport } from './routes/flashcards/history/index'
 import { Route as QuizzesHistorySessionIdRouteImport } from './routes/quizzes/history/$sessionId'
 import { Route as ApiAiQuizVerifyRouteImport } from './routes/api/ai/quiz-verify'
+import { Route as ApiAiContentSaveRouteImport } from './routes/api/ai/content-save'
+import { Route as ApiAiContentGenerateRouteImport } from './routes/api/ai/content-generate'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -27,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
 const QuizzesIndexRoute = QuizzesIndexRouteImport.update({
   id: '/quizzes/',
   path: '/quizzes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GenerateIndexRoute = GenerateIndexRouteImport.update({
+  id: '/generate/',
+  path: '/generate/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FlashcardsIndexRoute = FlashcardsIndexRouteImport.update({
@@ -64,13 +72,26 @@ const ApiAiQuizVerifyRoute = ApiAiQuizVerifyRouteImport.update({
   path: '/api/ai/quiz-verify',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiContentSaveRoute = ApiAiContentSaveRouteImport.update({
+  id: '/api/ai/content-save',
+  path: '/api/ai/content-save',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiContentGenerateRoute = ApiAiContentGenerateRouteImport.update({
+  id: '/api/ai/content-generate',
+  path: '/api/ai/content-generate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/flashcards/$groupId': typeof FlashcardsGroupIdRoute
   '/quizzes/$quizId': typeof QuizzesQuizIdRoute
   '/flashcards/': typeof FlashcardsIndexRoute
+  '/generate/': typeof GenerateIndexRoute
   '/quizzes/': typeof QuizzesIndexRoute
+  '/api/ai/content-generate': typeof ApiAiContentGenerateRoute
+  '/api/ai/content-save': typeof ApiAiContentSaveRoute
   '/api/ai/quiz-verify': typeof ApiAiQuizVerifyRoute
   '/quizzes/history/$sessionId': typeof QuizzesHistorySessionIdRoute
   '/flashcards/history/': typeof FlashcardsHistoryIndexRoute
@@ -81,7 +102,10 @@ export interface FileRoutesByTo {
   '/flashcards/$groupId': typeof FlashcardsGroupIdRoute
   '/quizzes/$quizId': typeof QuizzesQuizIdRoute
   '/flashcards': typeof FlashcardsIndexRoute
+  '/generate': typeof GenerateIndexRoute
   '/quizzes': typeof QuizzesIndexRoute
+  '/api/ai/content-generate': typeof ApiAiContentGenerateRoute
+  '/api/ai/content-save': typeof ApiAiContentSaveRoute
   '/api/ai/quiz-verify': typeof ApiAiQuizVerifyRoute
   '/quizzes/history/$sessionId': typeof QuizzesHistorySessionIdRoute
   '/flashcards/history': typeof FlashcardsHistoryIndexRoute
@@ -93,7 +117,10 @@ export interface FileRoutesById {
   '/flashcards/$groupId': typeof FlashcardsGroupIdRoute
   '/quizzes/$quizId': typeof QuizzesQuizIdRoute
   '/flashcards/': typeof FlashcardsIndexRoute
+  '/generate/': typeof GenerateIndexRoute
   '/quizzes/': typeof QuizzesIndexRoute
+  '/api/ai/content-generate': typeof ApiAiContentGenerateRoute
+  '/api/ai/content-save': typeof ApiAiContentSaveRoute
   '/api/ai/quiz-verify': typeof ApiAiQuizVerifyRoute
   '/quizzes/history/$sessionId': typeof QuizzesHistorySessionIdRoute
   '/flashcards/history/': typeof FlashcardsHistoryIndexRoute
@@ -106,7 +133,10 @@ export interface FileRouteTypes {
     | '/flashcards/$groupId'
     | '/quizzes/$quizId'
     | '/flashcards/'
+    | '/generate/'
     | '/quizzes/'
+    | '/api/ai/content-generate'
+    | '/api/ai/content-save'
     | '/api/ai/quiz-verify'
     | '/quizzes/history/$sessionId'
     | '/flashcards/history/'
@@ -117,7 +147,10 @@ export interface FileRouteTypes {
     | '/flashcards/$groupId'
     | '/quizzes/$quizId'
     | '/flashcards'
+    | '/generate'
     | '/quizzes'
+    | '/api/ai/content-generate'
+    | '/api/ai/content-save'
     | '/api/ai/quiz-verify'
     | '/quizzes/history/$sessionId'
     | '/flashcards/history'
@@ -128,7 +161,10 @@ export interface FileRouteTypes {
     | '/flashcards/$groupId'
     | '/quizzes/$quizId'
     | '/flashcards/'
+    | '/generate/'
     | '/quizzes/'
+    | '/api/ai/content-generate'
+    | '/api/ai/content-save'
     | '/api/ai/quiz-verify'
     | '/quizzes/history/$sessionId'
     | '/flashcards/history/'
@@ -140,7 +176,10 @@ export interface RootRouteChildren {
   FlashcardsGroupIdRoute: typeof FlashcardsGroupIdRoute
   QuizzesQuizIdRoute: typeof QuizzesQuizIdRoute
   FlashcardsIndexRoute: typeof FlashcardsIndexRoute
+  GenerateIndexRoute: typeof GenerateIndexRoute
   QuizzesIndexRoute: typeof QuizzesIndexRoute
+  ApiAiContentGenerateRoute: typeof ApiAiContentGenerateRoute
+  ApiAiContentSaveRoute: typeof ApiAiContentSaveRoute
   ApiAiQuizVerifyRoute: typeof ApiAiQuizVerifyRoute
   QuizzesHistorySessionIdRoute: typeof QuizzesHistorySessionIdRoute
   FlashcardsHistoryIndexRoute: typeof FlashcardsHistoryIndexRoute
@@ -161,6 +200,13 @@ declare module '@tanstack/react-router' {
       path: '/quizzes'
       fullPath: '/quizzes/'
       preLoaderRoute: typeof QuizzesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/generate/': {
+      id: '/generate/'
+      path: '/generate'
+      fullPath: '/generate/'
+      preLoaderRoute: typeof GenerateIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/flashcards/': {
@@ -212,6 +258,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiQuizVerifyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai/content-save': {
+      id: '/api/ai/content-save'
+      path: '/api/ai/content-save'
+      fullPath: '/api/ai/content-save'
+      preLoaderRoute: typeof ApiAiContentSaveRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai/content-generate': {
+      id: '/api/ai/content-generate'
+      path: '/api/ai/content-generate'
+      fullPath: '/api/ai/content-generate'
+      preLoaderRoute: typeof ApiAiContentGenerateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -220,7 +280,10 @@ const rootRouteChildren: RootRouteChildren = {
   FlashcardsGroupIdRoute: FlashcardsGroupIdRoute,
   QuizzesQuizIdRoute: QuizzesQuizIdRoute,
   FlashcardsIndexRoute: FlashcardsIndexRoute,
+  GenerateIndexRoute: GenerateIndexRoute,
   QuizzesIndexRoute: QuizzesIndexRoute,
+  ApiAiContentGenerateRoute: ApiAiContentGenerateRoute,
+  ApiAiContentSaveRoute: ApiAiContentSaveRoute,
   ApiAiQuizVerifyRoute: ApiAiQuizVerifyRoute,
   QuizzesHistorySessionIdRoute: QuizzesHistorySessionIdRoute,
   FlashcardsHistoryIndexRoute: FlashcardsHistoryIndexRoute,
