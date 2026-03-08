@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { QuizMarkdown } from './QuizMarkdown'
 
 interface Option {
 	label: string
@@ -95,7 +96,10 @@ export const QuizQuestion = ({
 						<span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-medium shrink-0">
 							{questionNumber}
 						</span>
-						<p className="text-lg leading-relaxed pt-1">{question.question}</p>
+						<QuizMarkdown
+							content={question.question}
+							className="prose prose-sm dark:prose-invert max-w-none pt-1 [&>p:first-child]:text-lg [&>p:first-child]:leading-relaxed"
+						/>
 					</div>
 
 					<div className="flex flex-col gap-2 mt-2">
@@ -245,17 +249,19 @@ export const QuizQuestion = ({
 
 						<div className="flex flex-col gap-2">
 							<h4 className="font-medium">Expert Explanation</h4>
-							<p className="text-muted-foreground leading-relaxed">
-								{question.explanation}
-							</p>
+							<QuizMarkdown
+								content={question.explanation}
+								className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground"
+							/>
 						</div>
 
 						{question.mistakes && (
 							<div className="flex flex-col gap-2">
 								<h4 className="font-medium">Common Mistakes</h4>
-								<p className="text-muted-foreground leading-relaxed">
-									{question.mistakes}
-								</p>
+								<QuizMarkdown
+									content={question.mistakes}
+									className="prose prose-sm dark:prose-invert max-w-none text-muted-foreground"
+								/>
 							</div>
 						)}
 					</div>

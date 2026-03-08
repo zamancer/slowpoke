@@ -2,6 +2,7 @@ import type { Quiz } from 'content-collections'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { QuestionResult } from '@/types/quiz'
+import { QuizMarkdown } from './QuizMarkdown'
 
 interface Question {
 	question: string
@@ -131,7 +132,10 @@ export const QuizResults = ({
 										{index + 1}
 									</span>
 									<div className="flex-1">
-										<p className="font-medium">{question.question}</p>
+										<QuizMarkdown
+											content={question.question}
+											className="prose prose-sm dark:prose-invert max-w-none [&>p:first-child]:font-medium"
+										/>
 									</div>
 									{verificationEnabled &&
 										result.aiVerification?.status === 'complete' && (
