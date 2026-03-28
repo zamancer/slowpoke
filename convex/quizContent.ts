@@ -52,6 +52,15 @@ export const create = mutation({
 	handler: async (ctx, args) => {
 		const user = await getAuthenticatedUser(ctx)
 
+		const existing = await ctx.db
+			.query('quizContent')
+			.withIndex('byContentId', (q) => q.eq('contentId', args.contentId))
+			.unique()
+
+		if (existing) {
+			throw new ConvexError('A quiz with this content ID already exists')
+		}
+
 		return await ctx.db.insert('quizContent', {
 			...args,
 			createdBy: user._id,

@@ -29,12 +29,18 @@ const typeColors: Record<string, string> = {
 export const QuizList = ({ quizzes }: QuizListProps) => {
 	const [confirmingId, setConfirmingId] = useState<string | null>(null)
 	const [removingId, setRemovingId] = useState<string | null>(null)
+	const [deleteError, setDeleteError] = useState<string | null>(null)
 	const removeQuiz = useMutation(api.quizContent.remove)
 
 	const handleDelete = async (contentId: string) => {
 		setRemovingId(contentId)
+		setDeleteError(null)
 		try {
 			await removeQuiz({ contentId })
+		} catch (err) {
+			setDeleteError(
+				err instanceof Error ? err.message : 'Failed to delete quiz.',
+			)
 		} finally {
 			setRemovingId(null)
 			setConfirmingId(null)
@@ -58,6 +64,8 @@ export const QuizList = ({ quizzes }: QuizListProps) => {
 					justify your answers.
 				</p>
 			</div>
+
+			{deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
 
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 				{quizzes.map((quiz) => (

@@ -10,7 +10,7 @@ function QuizPage() {
 	const { quizId } = Route.useParams()
 	const { quiz, isLoading } = useQuizById(quizId)
 
-	if (isLoading) {
+	if (isLoading && !quiz) {
 		return (
 			<div className="flex items-center justify-center min-h-100">
 				<div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />

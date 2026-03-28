@@ -20,12 +20,18 @@ const difficultyColors: Record<string, string> = {
 export const FlashcardGroupList = ({ groups }: FlashcardGroupListProps) => {
 	const [confirmingId, setConfirmingId] = useState<string | null>(null)
 	const [removingId, setRemovingId] = useState<string | null>(null)
+	const [deleteError, setDeleteError] = useState<string | null>(null)
 	const removeGroup = useMutation(api.flashcardContent.remove)
 
 	const handleDelete = async (contentId: string) => {
 		setRemovingId(contentId)
+		setDeleteError(null)
 		try {
 			await removeGroup({ contentId })
+		} catch (err) {
+			setDeleteError(
+				err instanceof Error ? err.message : 'Failed to delete group.',
+			)
 		} finally {
 			setRemovingId(null)
 			setConfirmingId(null)
@@ -48,6 +54,8 @@ export const FlashcardGroupList = ({ groups }: FlashcardGroupListProps) => {
 					Select a group to study. Each group contains related flashcards.
 				</p>
 			</div>
+
+			{deleteError && <p className="text-sm text-destructive">{deleteError}</p>}
 
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 				{groups.map((group) => (

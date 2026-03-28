@@ -36,6 +36,22 @@ type GenerationResult = {
 	quizMarkdown: string
 }
 
+const VALID_DIFFICULTIES = new Set<Difficulty>(['easy', 'medium', 'hard'])
+const VALID_QUIZ_TYPES = new Set<QuizType>([
+	'pattern-selection',
+	'anti-patterns',
+	'big-o',
+])
+
+const validateDifficulty = (
+	value: unknown,
+	fallback: Difficulty,
+): Difficulty =>
+	VALID_DIFFICULTIES.has(value as Difficulty) ? (value as Difficulty) : fallback
+
+const validateQuizType = (value: unknown, fallback: QuizType): QuizType =>
+	VALID_QUIZ_TYPES.has(value as QuizType) ? (value as QuizType) : fallback
+
 const slugify = (value: string) =>
 	value
 		.toLowerCase()
@@ -229,8 +245,10 @@ function ContentGeneratorPage() {
 					contentId: flashcardId,
 					category: normalizedCategory,
 					subcategory: normalizedSubcategory,
-					difficulty:
-						(flashcardMeta.difficulty as Difficulty) ?? flashcardDifficulty,
+					difficulty: validateDifficulty(
+						flashcardMeta.difficulty,
+						flashcardDifficulty,
+					),
 					tags: Array.isArray(flashcardMeta.tags)
 						? flashcardMeta.tags
 						: cleanedTags,
@@ -240,10 +258,10 @@ function ContentGeneratorPage() {
 				}),
 				createQuiz({
 					contentId: quizId,
-					type: (quizMeta.type as QuizType) ?? quizType,
+					type: validateQuizType(quizMeta.type, quizType),
 					category: normalizedCategory,
 					subcategory: normalizedSubcategory,
-					difficulty: (quizMeta.difficulty as Difficulty) ?? quizDifficulty,
+					difficulty: validateDifficulty(quizMeta.difficulty, quizDifficulty),
 					tags: Array.isArray(quizMeta.tags) ? quizMeta.tags : cleanedTags,
 					version: (quizMeta.version as string) ?? '1.0.0',
 					title: buildQuizTitle(normalizedSubcategory, quizType),
