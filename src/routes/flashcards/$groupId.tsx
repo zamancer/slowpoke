@@ -4,7 +4,6 @@ import { useFlashcardGroupById } from '@/hooks/useFlashcardGroupById'
 
 export const Route = createFileRoute('/flashcards/$groupId')({
 	component: FlashcardGroupPage,
-	notFoundComponent: NotFoundPage,
 })
 
 function FlashcardGroupPage() {

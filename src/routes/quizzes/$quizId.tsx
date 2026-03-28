@@ -4,7 +4,6 @@ import { useQuizById } from '@/hooks/useQuizById'
 
 export const Route = createFileRoute('/quizzes/$quizId')({
 	component: QuizPage,
-	notFoundComponent: NotFoundPage,
 })
 
 function QuizPage() {
