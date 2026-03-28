@@ -256,7 +256,7 @@ B
 
 ### Explanation
 
-This generates all valid combinations of n pairs of parentheses. The number of valid combinations is the n-th Catalan number, which is C(2n, n) / (n + 1) ≈ 4ⁿ / (n√n). Each valid string has length 2n and costs O(n) to copy/store, but the dominant factor is the number of nodes in the recursion tree. The total work is O(4ⁿ / √n).
+This generates all valid combinations of n pairs of parentheses. The number of valid combinations is the n-th Catalan number, which is C(2n, n) / (n + 1) ≈ 4ⁿ / (n√n). Each valid string has length 2n and costs O(n) to copy/store. Multiplying the number of results by the per-result copy cost gives O(n × 4ⁿ / (n√n)) = O(4ⁿ / √n). The n in the numerator and denominator cancel, yielding the final bound.
 
 ### Mistakes
 
