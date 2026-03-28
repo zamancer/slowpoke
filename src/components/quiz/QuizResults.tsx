@@ -1,6 +1,6 @@
-import type { Quiz } from 'content-collections'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
+import type { Quiz } from '@/types/content'
 import type { QuestionResult } from '@/types/quiz'
 
 interface Question {

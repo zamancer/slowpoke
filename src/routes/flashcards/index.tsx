@@ -1,14 +1,13 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { allFlashcardGroups } from 'content-collections'
 import { FlashcardGroupList } from '@/components/flashcard/FlashcardGroupList'
+import { useAllFlashcardGroups } from '@/hooks/useAllFlashcardGroups'
 
 export const Route = createFileRoute('/flashcards/')({
-	loader: () => allFlashcardGroups,
 	component: FlashcardsPage,
 })
 
 function FlashcardsPage() {
-	const groups = Route.useLoaderData()
+	const { groups } = useAllFlashcardGroups()
 
 	return (
 		<div className="container mx-auto py-8 px-4">

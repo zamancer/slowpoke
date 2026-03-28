@@ -1,21 +1,26 @@
-import { createFileRoute, Link, notFound } from '@tanstack/react-router'
-import { allQuizzes } from 'content-collections'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { QuizContainer } from '@/components/quiz/QuizContainer'
+import { useQuizById } from '@/hooks/useQuizById'
 
 export const Route = createFileRoute('/quizzes/$quizId')({
-	loader: ({ params }) => {
-		const quiz = allQuizzes.find((q) => q.id === params.quizId)
-		if (!quiz) {
-			throw notFound()
-		}
-		return quiz
-	},
 	component: QuizPage,
-	notFoundComponent: NotFoundPage,
 })
 
 function QuizPage() {
-	const quiz = Route.useLoaderData()
+	const { quizId } = Route.useParams()
+	const { quiz, isLoading } = useQuizById(quizId)
+
+	if (isLoading && !quiz) {
+		return (
+			<div className="flex items-center justify-center min-h-100">
+				<div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+			</div>
+		)
+	}
+
+	if (!quiz) {
+		return <NotFoundPage />
+	}
 
 	return (
 		<div className="container mx-auto py-8 px-4">

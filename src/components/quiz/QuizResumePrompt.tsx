@@ -1,6 +1,6 @@
 'use client'
 
-import type { Quiz } from 'content-collections'
+import type { Quiz } from '@/types/content'
 
 interface QuizResumePromptProps {
 	quiz: Quiz

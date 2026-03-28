@@ -1,9 +1,9 @@
 'use client'
 
-import type { FlashcardGroup } from 'content-collections'
 import { useMutation, useQuery } from 'convex/react'
 import { useCallback, useEffect, useState } from 'react'
 import { useConvexUser } from '@/hooks/useConvexUser'
+import type { FlashcardGroup } from '@/types/content'
 import { api } from '../../../convex/_generated/api'
 import type { Id } from '../../../convex/_generated/dataModel'
 import { FlashcardCard } from './FlashcardCard'
