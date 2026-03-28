@@ -1,4 +1,4 @@
-import { v } from 'convex/values'
+import { ConvexError, v } from 'convex/values'
 import { mutation, query } from './_generated/server'
 import { getAuthenticatedUser } from './lib/auth'
 
@@ -56,5 +56,43 @@ export const create = mutation({
 			...args,
 			createdBy: user._id,
 		})
+	},
+})
+
+export const remove = mutation({
+	args: {
+		contentId: v.string(),
+	},
+	handler: async (ctx, args) => {
+		await getAuthenticatedUser(ctx)
+
+		const content = await ctx.db
+			.query('quizContent')
+			.withIndex('byContentId', (q) => q.eq('contentId', args.contentId))
+			.unique()
+
+		if (!content) {
+			throw new ConvexError('Quiz not found')
+		}
+
+		const sessions = await ctx.db
+			.query('quizSessions')
+			.filter((q) => q.eq(q.field('quizId'), args.contentId))
+			.collect()
+
+		for (const session of sessions) {
+			const answers = await ctx.db
+				.query('quizAnswers')
+				.withIndex('bySessionId', (q) => q.eq('sessionId', session._id))
+				.collect()
+
+			for (const answer of answers) {
+				await ctx.db.delete(answer._id)
+			}
+
+			await ctx.db.delete(session._id)
+		}
+
+		await ctx.db.delete(content._id)
 	},
 })
