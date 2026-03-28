@@ -3,6 +3,7 @@ import type {
 	Quiz as StaticQuiz,
 } from 'content-collections'
 import type { FlashcardGroup, Quiz } from '@/types/content'
+import type { Doc } from '../../convex/_generated/dataModel'
 
 export const mapStaticQuiz = (quiz: StaticQuiz): Quiz => ({
 	id: quiz.id,
@@ -29,4 +30,31 @@ export const mapStaticFlashcardGroup = (
 	title: group.title,
 	cards: group.cards,
 	source: 'static',
+})
+
+export const mapConvexQuiz = (doc: Doc<'quizContent'>): Quiz => ({
+	id: doc.contentId,
+	type: doc.type,
+	category: doc.category,
+	subcategory: doc.subcategory,
+	difficulty: doc.difficulty,
+	tags: doc.tags,
+	version: doc.version,
+	title: doc.title,
+	questions: doc.questions,
+	source: 'convex',
+})
+
+export const mapConvexFlashcardGroup = (
+	doc: Doc<'flashcardContent'>,
+): FlashcardGroup => ({
+	id: doc.contentId,
+	category: doc.category,
+	subcategory: doc.subcategory,
+	difficulty: doc.difficulty,
+	tags: doc.tags,
+	version: doc.version,
+	title: doc.title,
+	cards: doc.cards,
+	source: 'convex',
 })

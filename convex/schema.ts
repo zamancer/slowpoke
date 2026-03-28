@@ -87,4 +87,55 @@ export default defineSchema({
 	})
 		.index('byUserId', ['userId'])
 		.index('byUserIdAndDate', ['userId', 'date']),
+
+	quizContent: defineTable({
+		contentId: v.string(),
+		type: v.union(
+			v.literal('pattern-selection'),
+			v.literal('anti-patterns'),
+			v.literal('big-o'),
+		),
+		category: v.string(),
+		subcategory: v.string(),
+		difficulty: v.union(
+			v.literal('easy'),
+			v.literal('medium'),
+			v.literal('hard'),
+		),
+		tags: v.array(v.string()),
+		version: v.string(),
+		title: v.string(),
+		questions: v.array(
+			v.object({
+				question: v.string(),
+				options: v.array(v.object({ label: v.string(), text: v.string() })),
+				answer: v.string(),
+				explanation: v.string(),
+				mistakes: v.optional(v.string()),
+			}),
+		),
+		createdBy: v.optional(v.id('users')),
+	})
+		.index('byContentId', ['contentId'])
+		.index('byCategory', ['category']),
+
+	flashcardContent: defineTable({
+		contentId: v.string(),
+		category: v.string(),
+		subcategory: v.string(),
+		difficulty: v.union(
+			v.literal('easy'),
+			v.literal('medium'),
+			v.literal('hard'),
+		),
+		tags: v.array(v.string()),
+		version: v.string(),
+		title: v.string(),
+		cards: v.array(
+			v.object({ front: v.string(), back: v.string() }),
+		),
+		createdBy: v.optional(v.id('users')),
+	})
+		.index('byContentId', ['contentId'])
+		.index('byCategory', ['category']),
 })
