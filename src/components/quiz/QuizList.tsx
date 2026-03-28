@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import type { Quiz } from 'content-collections'
 import { cn } from '@/lib/utils'
+import type { Quiz } from '@/types/content'
 
 interface QuizListProps {
 	quizzes: Quiz[]

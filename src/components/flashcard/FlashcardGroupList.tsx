@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
-import type { FlashcardGroup } from 'content-collections'
 import { cn } from '@/lib/utils'
+import type { FlashcardGroup } from '@/types/content'
 
 interface FlashcardGroupListProps {
 	groups: FlashcardGroup[]

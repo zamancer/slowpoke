@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { allFlashcardGroups } from 'content-collections'
 import { FlashcardGroupList } from '@/components/flashcard/FlashcardGroupList'
+import { mapStaticFlashcardGroup } from '@/lib/content/mappers'
 
 export const Route = createFileRoute('/flashcards/')({
-	loader: () => allFlashcardGroups,
+	loader: () => allFlashcardGroups.map(mapStaticFlashcardGroup),
 	component: FlashcardsPage,
 })
 

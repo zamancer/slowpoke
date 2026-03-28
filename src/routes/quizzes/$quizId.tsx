@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { allQuizzes } from 'content-collections'
 import { QuizContainer } from '@/components/quiz/QuizContainer'
+import { mapStaticQuiz } from '@/lib/content/mappers'
 
 export const Route = createFileRoute('/quizzes/$quizId')({
 	loader: ({ params }) => {
@@ -8,7 +9,7 @@ export const Route = createFileRoute('/quizzes/$quizId')({
 		if (!quiz) {
 			throw notFound()
 		}
-		return quiz
+		return mapStaticQuiz(quiz)
 	},
 	component: QuizPage,
 	notFoundComponent: NotFoundPage,

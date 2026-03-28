@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from '@tanstack/react-router'
 import { allFlashcardGroups } from 'content-collections'
 import { FlashcardGrid } from '@/components/flashcard/FlashcardGrid'
+import { mapStaticFlashcardGroup } from '@/lib/content/mappers'
 
 export const Route = createFileRoute('/flashcards/$groupId')({
 	loader: ({ params }) => {
@@ -8,7 +9,7 @@ export const Route = createFileRoute('/flashcards/$groupId')({
 		if (!group) {
 			throw notFound()
 		}
-		return group
+		return mapStaticFlashcardGroup(group)
 	},
 	component: FlashcardGroupPage,
 	notFoundComponent: NotFoundPage,

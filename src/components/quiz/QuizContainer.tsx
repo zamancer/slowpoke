@@ -1,10 +1,10 @@
 'use client'
 
-import type { Quiz } from 'content-collections'
 import { useMutation, useQuery } from 'convex/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useConvexUser } from '@/hooks/useConvexUser'
 import { useQuizVerification } from '@/hooks/useQuizVerification'
+import type { Quiz } from '@/types/content'
 import type {
 	AiVerification,
 	QuestionResult,

@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { allQuizzes } from 'content-collections'
 import { QuizList } from '@/components/quiz/QuizList'
+import { mapStaticQuiz } from '@/lib/content/mappers'
 
 export const Route = createFileRoute('/quizzes/')({
-	loader: () => allQuizzes,
+	loader: () => allQuizzes.map(mapStaticQuiz),
 	component: QuizzesPage,
 })
 
