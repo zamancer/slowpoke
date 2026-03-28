@@ -77,7 +77,7 @@ export const remove = mutation({
 
 		const sessions = await ctx.db
 			.query('flashcardSessions')
-			.filter((q) => q.eq(q.field('groupId'), args.contentId))
+			.withIndex('byGroupId', (q) => q.eq('groupId', args.contentId))
 			.collect()
 
 		for (const session of sessions) {

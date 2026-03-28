@@ -32,6 +32,7 @@ export default defineSchema({
 		completedAt: v.optional(v.number()),
 	})
 		.index('byUserId', ['userId'])
+		.index('byQuizId', ['quizId'])
 		.index('byUserIdAndQuizId', ['userId', 'quizId'])
 		.index('byUserIdAndStatus', ['userId', 'status']),
 
@@ -69,6 +70,7 @@ export default defineSchema({
 		lastStudiedAt: v.number(),
 	})
 		.index('byUserId', ['userId'])
+		.index('byGroupId', ['groupId'])
 		.index('byUserIdAndGroupId', ['userId', 'groupId']),
 
 	flashcardReveals: defineTable({

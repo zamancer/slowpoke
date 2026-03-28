@@ -86,7 +86,7 @@ export const remove = mutation({
 
 		const sessions = await ctx.db
 			.query('quizSessions')
-			.filter((q) => q.eq(q.field('quizId'), args.contentId))
+			.withIndex('byQuizId', (q) => q.eq('quizId', args.contentId))
 			.collect()
 
 		for (const session of sessions) {
