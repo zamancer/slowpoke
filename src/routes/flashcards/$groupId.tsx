@@ -1,22 +1,27 @@
-import { createFileRoute, Link, notFound } from '@tanstack/react-router'
-import { allFlashcardGroups } from 'content-collections'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { FlashcardGrid } from '@/components/flashcard/FlashcardGrid'
-import { mapStaticFlashcardGroup } from '@/lib/content/mappers'
+import { useFlashcardGroupById } from '@/hooks/useFlashcardGroupById'
 
 export const Route = createFileRoute('/flashcards/$groupId')({
-	loader: ({ params }) => {
-		const group = allFlashcardGroups.find((g) => g.id === params.groupId)
-		if (!group) {
-			throw notFound()
-		}
-		return mapStaticFlashcardGroup(group)
-	},
 	component: FlashcardGroupPage,
 	notFoundComponent: NotFoundPage,
 })
 
 function FlashcardGroupPage() {
-	const group = Route.useLoaderData()
+	const { groupId } = Route.useParams()
+	const { group, isLoading } = useFlashcardGroupById(groupId)
+
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center min-h-100">
+				<div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+			</div>
+		)
+	}
+
+	if (!group) {
+		return <NotFoundPage />
+	}
 
 	return (
 		<div className="container mx-auto py-8 px-4">
