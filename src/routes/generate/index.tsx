@@ -1,5 +1,6 @@
 import { SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react'
 import { createFileRoute } from '@tanstack/react-router'
+import { useMutation } from 'convex/react'
 import { FileText, Sparkles } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -13,7 +14,13 @@ import {
 	SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import {
+	parseCardSections,
+	parseFrontmatter,
+	parseQuizQuestions,
+} from '@/lib/content/parsers'
 import { extractTextFromPdf } from '@/lib/pdf/extract-text'
+import { api } from '../../../convex/_generated/api'
 
 export const Route = createFileRoute('/generate/')({
 	component: ContentGeneratorPage,
@@ -36,9 +43,32 @@ const slugify = (value: string) =>
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/(^-|-$)/g, '')
 
-const getSequenceFromId = (id: string): string => {
-	const match = id.match(/-(\d+)$/)
-	return match?.[1] ?? '001'
+const buildQuizTitle = (subcategory: string, type: string): string => {
+	const subcategoryTitle = subcategory
+		.split('-')
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(' ')
+
+	const typeLabel =
+		type === 'pattern-selection'
+			? 'Pattern Selection'
+			: type === 'anti-patterns'
+				? 'Anti-Patterns'
+				: type === 'big-o'
+					? 'Big O Analysis'
+					: type
+
+	return `${subcategoryTitle}: ${typeLabel}`
+}
+
+const buildFlashcardTitle = (subcategory: string, id: string): string => {
+	const subcategoryTitle = subcategory
+		.split('-')
+		.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+		.join(' ')
+
+	const isFirstGroup = id.endsWith('001')
+	return `${subcategoryTitle} ${isFirstGroup ? 'Fundamentals' : 'Applications'}`
 }
 
 function ContentGeneratorPage() {
@@ -67,12 +97,13 @@ function ContentGeneratorPage() {
 	const [saveMessage, setSaveMessage] = useState<string | null>(null)
 	const [result, setResult] = useState<GenerationResult | null>(null)
 
+	const createQuiz = useMutation(api.quizContent.create)
+	const createFlashcardGroup = useMutation(api.flashcardContent.create)
+
 	const normalizedCategory = slugify(category)
 	const normalizedSubcategory = slugify(subcategory)
 	const flashcardId = `${normalizedCategory}-${normalizedSubcategory}-group-001`
 	const quizId = `${quizType}-${normalizedSubcategory}-001`
-	const flashcardFileName = `${normalizedSubcategory}-${getSequenceFromId(flashcardId)}.md`
-	const quizFileName = `${normalizedSubcategory}-${getSequenceFromId(quizId)}.md`
 
 	const parseTags = () =>
 		tags
@@ -175,7 +206,7 @@ function ContentGeneratorPage() {
 		}
 	}
 
-	const handleSaveToContentFolder = async () => {
+	const handleSaveToConvex = async () => {
 		if (!result) return
 
 		setError(null)
@@ -183,32 +214,48 @@ function ContentGeneratorPage() {
 		setIsSaving(true)
 
 		try {
-			const response = await fetch('/api/ai/content-save', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
+			const flashcardParsed = parseFrontmatter(result.flashcardsMarkdown)
+			const cards = parseCardSections(flashcardParsed.content)
+			const flashcardMeta = flashcardParsed.metadata
+
+			const quizParsed = parseFrontmatter(result.quizMarkdown)
+			const questions = parseQuizQuestions(quizParsed.content)
+			const quizMeta = quizParsed.metadata
+
+			const cleanedTags = parseTags().map(slugify)
+
+			await Promise.all([
+				createFlashcardGroup({
+					contentId: flashcardId,
 					category: normalizedCategory,
 					subcategory: normalizedSubcategory,
-					quizType,
-					flashcardsMarkdown: result.flashcardsMarkdown,
-					quizMarkdown: result.quizMarkdown,
-					flashcardFileName,
-					quizFileName,
+					difficulty:
+						(flashcardMeta.difficulty as Difficulty) ?? flashcardDifficulty,
+					tags: Array.isArray(flashcardMeta.tags)
+						? flashcardMeta.tags
+						: cleanedTags,
+					version: (flashcardMeta.version as string) ?? '1.0.0',
+					title: buildFlashcardTitle(normalizedSubcategory, flashcardId),
+					cards,
 				}),
-			})
+				createQuiz({
+					contentId: quizId,
+					type: (quizMeta.type as QuizType) ?? quizType,
+					category: normalizedCategory,
+					subcategory: normalizedSubcategory,
+					difficulty: (quizMeta.difficulty as Difficulty) ?? quizDifficulty,
+					tags: Array.isArray(quizMeta.tags) ? quizMeta.tags : cleanedTags,
+					version: (quizMeta.version as string) ?? '1.0.0',
+					title: buildQuizTitle(normalizedSubcategory, quizType),
+					questions,
+				}),
+			])
 
-			const data = (await response.json()) as
-				| { flashcardsPath: string; quizPath: string }
-				| { error?: string }
-
-			if (!response.ok) {
-				setError(data.error ?? 'Save failed.')
-				return
-			}
-
-			setSaveMessage(`Saved files: ${data.flashcardsPath} and ${data.quizPath}`)
-		} catch {
-			setError('Save request failed. Please try again.')
+			setSaveMessage(
+				`Saved to Convex: ${cards.length} flashcards and ${questions.length} quiz questions`,
+			)
+		} catch (err) {
+			setError(err instanceof Error ? err.message : 'Failed to save to Convex.')
 		} finally {
 			setIsSaving(false)
 		}
@@ -222,7 +269,7 @@ function ContentGeneratorPage() {
 					<div>
 						<h1 className="text-2xl font-bold">Content Generator</h1>
 						<p className="text-sm text-muted-foreground">
-							Generate flashcard and quiz markdown files directly in-app.
+							Generate flashcard and quiz content from source material.
 						</p>
 					</div>
 				</div>
@@ -403,14 +450,6 @@ function ContentGeneratorPage() {
 									<FileText className="inline mr-2" size={14} />
 									Quiz ID: <code>{quizId}</code>
 								</div>
-								<div>
-									<FileText className="inline mr-2" size={14} />
-									Flashcard file: <code>{flashcardFileName}</code>
-								</div>
-								<div>
-									<FileText className="inline mr-2" size={14} />
-									Quiz file: <code>{quizFileName}</code>
-								</div>
 							</div>
 
 							{error ? (
@@ -424,19 +463,18 @@ function ContentGeneratorPage() {
 								onClick={() => void handleGenerate()}
 								disabled={isGenerating}
 							>
-								{isGenerating ? 'Generating...' : 'Generate Markdown Files'}
+								{isGenerating ? 'Generating...' : 'Generate Content'}
 							</Button>
 						</section>
 
 						<section className="rounded-lg border p-5 bg-card space-y-4">
 							<div className="flex items-center justify-between gap-3">
-								<h2 className="font-semibold">Generated Files</h2>
+								<h2 className="font-semibold">Generated Content</h2>
 								<Button
-									variant="outline"
-									onClick={() => void handleSaveToContentFolder()}
+									onClick={() => void handleSaveToConvex()}
 									disabled={!result || isSaving}
 								>
-									{isSaving ? 'Saving...' : 'Save to content folder'}
+									{isSaving ? 'Saving...' : 'Save to Convex'}
 								</Button>
 							</div>
 							{result ? (
@@ -504,7 +542,7 @@ function ContentGeneratorPage() {
 								</div>
 							) : (
 								<p className="text-sm text-muted-foreground">
-									Generated files will appear here.
+									Generated content will appear here.
 								</p>
 							)}
 						</section>
