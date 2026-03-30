@@ -26,6 +26,9 @@ const typeColors: Record<string, string> = {
 		'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
 }
 
+const DEFAULT_TYPE_COLOR =
+	'bg-slate-100 text-slate-800 dark:bg-slate-900 dark:text-slate-200'
+
 export const QuizList = ({ quizzes }: QuizListProps) => {
 	const [confirmingId, setConfirmingId] = useState<string | null>(null)
 	const [removingId, setRemovingId] = useState<string | null>(null)
@@ -99,7 +102,7 @@ export const QuizList = ({ quizzes }: QuizListProps) => {
 								<span
 									className={cn(
 										'px-2 py-0.5 rounded-full text-xs font-medium',
-										typeColors[quiz.type],
+										typeColors[quiz.type] ?? DEFAULT_TYPE_COLOR,
 									)}
 								>
 									{quiz.type.replace('-', ' ')}

@@ -5,7 +5,8 @@ import { getAuthenticatedUser } from './lib/auth'
 export const list = query({
 	args: {},
 	handler: async (ctx) => {
-		return await ctx.db.query('quizContent').collect()
+		const all = await ctx.db.query('quizContent').collect()
+		return all.filter((q) => q.status !== 'draft')
 	},
 })
 
@@ -21,14 +22,41 @@ export const getByContentId = query({
 	},
 })
 
+export const listDrafts = query({
+	args: {},
+	handler: async (ctx) => {
+		const user = await getAuthenticatedUser(ctx)
+		const all = await ctx.db
+			.query('quizContent')
+			.withIndex('byStatus', (q) => q.eq('status', 'draft'))
+			.collect()
+		return all.filter((q) => q.createdBy === user._id)
+	},
+})
+
+export const getDraft = query({
+	args: {
+		contentId: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const user = await getAuthenticatedUser(ctx)
+		const draft = await ctx.db
+			.query('quizContent')
+			.withIndex('byContentId', (q) => q.eq('contentId', args.contentId))
+			.unique()
+
+		if (!draft || draft.status !== 'draft' || draft.createdBy !== user._id) {
+			return null
+		}
+
+		return draft
+	},
+})
+
 export const create = mutation({
 	args: {
 		contentId: v.string(),
-		type: v.union(
-			v.literal('pattern-selection'),
-			v.literal('anti-patterns'),
-			v.literal('big-o'),
-		),
+		type: v.string(),
 		category: v.string(),
 		subcategory: v.string(),
 		difficulty: v.union(
@@ -48,6 +76,10 @@ export const create = mutation({
 				mistakes: v.optional(v.string()),
 			}),
 		),
+		status: v.optional(
+			v.union(v.literal('draft'), v.literal('published')),
+		),
+		sourcePrompt: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
 		const user = await getAuthenticatedUser(ctx)
@@ -63,8 +95,76 @@ export const create = mutation({
 
 		return await ctx.db.insert('quizContent', {
 			...args,
+			status: args.status ?? 'draft',
 			createdBy: user._id,
 		})
+	},
+})
+
+export const updateDraft = mutation({
+	args: {
+		contentId: v.string(),
+		title: v.optional(v.string()),
+		type: v.optional(v.string()),
+		category: v.optional(v.string()),
+		subcategory: v.optional(v.string()),
+		difficulty: v.optional(
+			v.union(
+				v.literal('easy'),
+				v.literal('medium'),
+				v.literal('hard'),
+			),
+		),
+		tags: v.optional(v.array(v.string())),
+	},
+	handler: async (ctx, args) => {
+		const user = await getAuthenticatedUser(ctx)
+		const draft = await ctx.db
+			.query('quizContent')
+			.withIndex('byContentId', (q) => q.eq('contentId', args.contentId))
+			.unique()
+
+		if (!draft) {
+			throw new ConvexError('Draft not found')
+		}
+		if (draft.status !== 'draft') {
+			throw new ConvexError('Only drafts can be edited')
+		}
+		if (draft.createdBy !== user._id) {
+			throw new ConvexError('Not authorized to edit this draft')
+		}
+
+		const { contentId: _, ...updates } = args
+		const fieldsToUpdate = Object.fromEntries(
+			Object.entries(updates).filter(([, v]) => v !== undefined),
+		)
+
+		await ctx.db.patch(draft._id, fieldsToUpdate)
+	},
+})
+
+export const publish = mutation({
+	args: {
+		contentId: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const user = await getAuthenticatedUser(ctx)
+		const draft = await ctx.db
+			.query('quizContent')
+			.withIndex('byContentId', (q) => q.eq('contentId', args.contentId))
+			.unique()
+
+		if (!draft) {
+			throw new ConvexError('Quiz not found')
+		}
+		if (draft.status !== 'draft') {
+			throw new ConvexError('Only drafts can be published')
+		}
+		if (draft.createdBy !== user._id) {
+			throw new ConvexError('Not authorized to publish this draft')
+		}
+
+		await ctx.db.patch(draft._id, { status: 'published' })
 	},
 })
 

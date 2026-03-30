@@ -16,6 +16,7 @@ export const mapStaticQuiz = (quiz: StaticQuiz): Quiz => ({
 	title: quiz.title,
 	questions: quiz.questions,
 	source: 'static',
+	status: 'published',
 })
 
 export const mapStaticFlashcardGroup = (
@@ -43,6 +44,7 @@ export const mapConvexQuiz = (doc: Doc<'quizContent'>): Quiz => ({
 	title: doc.title,
 	questions: doc.questions,
 	source: 'convex',
+	status: doc.status ?? 'published',
 })
 
 export const mapConvexFlashcardGroup = (
