@@ -105,7 +105,7 @@ export const QuizList = ({ quizzes }: QuizListProps) => {
 										typeColors[quiz.type] ?? DEFAULT_TYPE_COLOR,
 									)}
 								>
-									{quiz.type.replace('-', ' ')}
+									{quiz.type.replace(/-/g, ' ')}
 								</span>
 							</div>
 

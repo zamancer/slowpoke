@@ -137,6 +137,7 @@ function DraftPreview({ contentId }: { contentId: string }) {
 	}
 
 	const handlePublish = async () => {
+		if (isEditing) return
 		setIsPublishing(true)
 		setError(null)
 		try {
@@ -149,6 +150,7 @@ function DraftPreview({ contentId }: { contentId: string }) {
 	}
 
 	const handleDelete = async () => {
+		if (isEditing) return
 		setIsDeleting(true)
 		setError(null)
 		try {
@@ -162,6 +164,7 @@ function DraftPreview({ contentId }: { contentId: string }) {
 	}
 
 	const handleRegenerate = () => {
+		if (isEditing) return
 		navigate({
 			to: '/generate/quiz',
 			search: { prompt: draft.sourcePrompt ?? '' },
@@ -222,7 +225,7 @@ function DraftPreview({ contentId }: { contentId: string }) {
 			<div className="flex items-center gap-3 pt-4 border-t border-border">
 				<Button
 					onClick={() => void handlePublish()}
-					disabled={isPublishing || isDeleting}
+					disabled={isPublishing || isDeleting || isEditing}
 				>
 					{isPublishing ? (
 						'Publishing...'
@@ -233,7 +236,7 @@ function DraftPreview({ contentId }: { contentId: string }) {
 						</>
 					)}
 				</Button>
-				<Button variant="outline" onClick={handleRegenerate}>
+				<Button variant="outline" onClick={handleRegenerate} disabled={isEditing}>
 					<RotateCcw size={16} className="mr-1" />
 					Regenerate
 				</Button>
@@ -243,7 +246,7 @@ function DraftPreview({ contentId }: { contentId: string }) {
 							variant="destructive"
 							size="sm"
 							onClick={() => void handleDelete()}
-							disabled={isDeleting}
+							disabled={isDeleting || isEditing}
 						>
 							{isDeleting ? 'Deleting...' : 'Confirm Delete'}
 						</Button>
@@ -261,6 +264,7 @@ function DraftPreview({ contentId }: { contentId: string }) {
 						variant="ghost"
 						size="sm"
 						onClick={() => setConfirmDelete(true)}
+						disabled={isEditing}
 						className="ml-auto text-muted-foreground hover:text-destructive"
 					>
 						<Trash2 size={16} className="mr-1" />
@@ -427,6 +431,7 @@ const MetadataSection = ({
 					<button
 						type="button"
 						onClick={onStartEditing}
+						aria-label="Edit draft metadata"
 						className="p-1 text-muted-foreground hover:text-primary transition-colors"
 					>
 						<Pencil size={14} />

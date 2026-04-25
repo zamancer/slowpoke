@@ -18,6 +18,9 @@ import { extractTextFromPdf } from '@/lib/pdf/extract-text'
 import { api } from '../../../../convex/_generated/api'
 
 export const Route = createFileRoute('/generate/quiz/')({
+	validateSearch: (search: Record<string, unknown>) => ({
+		prompt: typeof search.prompt === 'string' ? search.prompt : '',
+	}),
 	component: QuizGeneratorPage,
 })
 
@@ -50,11 +53,12 @@ function QuizGeneratorPage() {
 
 function QuizGenerateForm() {
 	const navigate = useNavigate()
+	const { prompt: initialPrompt } = Route.useSearch()
 	const promptId = useId()
 	const sourceTextId = useId()
 	const sourceFileId = useId()
 
-	const [prompt, setPrompt] = useState('')
+	const [prompt, setPrompt] = useState(initialPrompt)
 	const [sourceText, setSourceText] = useState('')
 	const [questionCount, setQuestionCount] = useState(10)
 	const [difficulty, setDifficulty] = useState<Difficulty | ''>('')
@@ -139,7 +143,6 @@ function QuizGenerateForm() {
 				version: '1.0.0',
 				title: quiz.title,
 				questions: quiz.questions,
-				status: 'draft',
 				sourcePrompt: prompt.trim(),
 			})
 
@@ -216,6 +219,7 @@ function QuizGenerateForm() {
 									<SelectValue placeholder="Let AI decide" />
 								</SelectTrigger>
 								<SelectContent>
+									<SelectItem value="">Let AI decide</SelectItem>
 									<SelectItem value="easy">Easy</SelectItem>
 									<SelectItem value="medium">Medium</SelectItem>
 									<SelectItem value="hard">Hard</SelectItem>

@@ -47,12 +47,12 @@ function DraftsList() {
 						Review and publish your generated quizzes.
 					</p>
 				</div>
-				<Link to="/generate/quiz">
-					<Button variant="outline" size="sm">
+				<Button asChild variant="outline" size="sm">
+					<Link to="/generate/quiz" search={{ prompt: '' }}>
 						<Plus size={16} className="mr-1" />
 						New Quiz
-					</Button>
-				</Link>
+					</Link>
+				</Button>
 			</div>
 
 			{drafts === undefined && (
@@ -65,9 +65,9 @@ function DraftsList() {
 					<p className="text-muted-foreground">
 						No drafts yet. Generate a quiz to get started.
 					</p>
-					<Link to="/generate/quiz">
-						<Button>Generate Quiz</Button>
-					</Link>
+					<Button asChild>
+						<Link to="/generate/quiz" search={{ prompt: '' }}>Generate Quiz</Link>
+					</Button>
 				</div>
 			)}
 

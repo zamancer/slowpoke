@@ -76,9 +76,6 @@ export const create = mutation({
 				mistakes: v.optional(v.string()),
 			}),
 		),
-		status: v.optional(
-			v.union(v.literal('draft'), v.literal('published')),
-		),
 		sourcePrompt: v.optional(v.string()),
 	},
 	handler: async (ctx, args) => {
@@ -95,7 +92,7 @@ export const create = mutation({
 
 		return await ctx.db.insert('quizContent', {
 			...args,
-			status: args.status ?? 'draft',
+			status: 'draft',
 			createdBy: user._id,
 		})
 	},
@@ -162,6 +159,33 @@ export const publish = mutation({
 		}
 		if (draft.createdBy !== user._id) {
 			throw new ConvexError('Not authorized to publish this draft')
+		}
+
+		if (!draft.title?.trim()) {
+			throw new ConvexError('Quiz must have a non-empty title before publishing')
+		}
+		if (!draft.type?.trim()) {
+			throw new ConvexError('Quiz must have a non-empty type before publishing')
+		}
+		if (!draft.category?.trim()) {
+			throw new ConvexError('Quiz must have a category before publishing')
+		}
+		if (!draft.subcategory?.trim()) {
+			throw new ConvexError('Quiz must have a subcategory before publishing')
+		}
+		if (!draft.questions || draft.questions.length === 0) {
+			throw new ConvexError('Quiz must have at least one question before publishing')
+		}
+		for (const q of draft.questions) {
+			if (!q.question?.trim()) {
+				throw new ConvexError('All questions must have non-empty prompt text')
+			}
+			if (!q.options || q.options.length === 0) {
+				throw new ConvexError('All questions must have answer options')
+			}
+			if (!q.answer?.trim()) {
+				throw new ConvexError('All questions must have an answer')
+			}
 		}
 
 		await ctx.db.patch(draft._id, { status: 'published' })

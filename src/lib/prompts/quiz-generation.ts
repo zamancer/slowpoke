@@ -25,11 +25,14 @@ Difficulty calibration:
 Every question must have exactly 4 options (A, B, C, D) with exactly one correct answer. Explanations should teach, not just state the answer. Mistakes should explain why each wrong option is appealing.
 `
 
+const escapeForSentinel = (text: string): string =>
+	text.replace(/<\//g, '<\\/')
+
 export const buildQuizGenerationPrompt = (
 	input: QuizGenerationInput,
 ): string => {
 	const sections: string[] = [
-		`Generate a quiz based on the following prompt:\n<prompt>\n${input.prompt}\n</prompt>`,
+		`Generate a quiz based on the following prompt:\n<prompt>\n${escapeForSentinel(input.prompt)}\n</prompt>`,
 		`Generate exactly ${input.questionCount} questions.`,
 	]
 
@@ -57,7 +60,7 @@ export const buildQuizGenerationPrompt = (
 
 	if (input.sourceText) {
 		sections.push(
-			`Use the following source material as reference for generating questions:\n<source>\n${input.sourceText}\n</source>`,
+			`Use the following source material as reference for generating questions:\n<source>\n${escapeForSentinel(input.sourceText)}\n</source>`,
 		)
 	}
 
