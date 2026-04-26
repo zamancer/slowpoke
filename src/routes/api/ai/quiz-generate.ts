@@ -37,6 +37,8 @@ export const Route = createFileRoute('/api/ai/quiz-generate')({
 	server: {
 		handlers: {
 			POST: async ({ request }) => {
+				console.log('[quiz-generate] handler invoked')
+
 				const { isAuthenticated } = await clerk.authenticateRequest(request)
 				if (!isAuthenticated) return jsonError('Unauthorized', 401)
 
@@ -51,6 +53,10 @@ export const Route = createFileRoute('/api/ai/quiz-generate')({
 				if (!parsedInput.success) {
 					return jsonError('Invalid quiz generation request', 400)
 				}
+
+				console.log(
+					`[quiz-generate] starting generation, questionCount=${parsedInput.data.questionCount}`,
+				)
 
 				const prompt = buildQuizGenerationPrompt(parsedInput.data)
 				const adapter = anthropicText(MODEL as 'claude-sonnet-4')

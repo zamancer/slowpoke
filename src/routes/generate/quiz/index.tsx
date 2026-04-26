@@ -38,6 +38,7 @@ const accumulateSseText = async (response: Response): Promise<string> => {
 	const decoder = new TextDecoder()
 	let buffer = ''
 	let lastContent = ''
+	let receivedDone = false
 
 	while (true) {
 		const { done, value } = await reader.read()
@@ -51,20 +52,35 @@ const accumulateSseText = async (response: Response): Promise<string> => {
 			for (const line of part.split('\n')) {
 				if (!line.startsWith('data: ')) continue
 				const data = line.slice(6)
-				if (data === '[DONE]') return lastContent
+				if (data === '[DONE]') {
+					receivedDone = true
+					return lastContent
+				}
 				try {
 					const event = JSON.parse(data) as {
 						type?: string
 						content?: string
+						error?: { message?: string }
 					}
 					if (event.type === 'content' && typeof event.content === 'string') {
 						lastContent = event.content
+					} else if (event.type === 'error') {
+						throw new Error(
+							event.error?.message ?? 'Generation failed — please try again',
+						)
 					}
-				} catch {
-					// skip malformed events
+				} catch (e) {
+					if (e instanceof SyntaxError) continue
+					throw e
 				}
 			}
 		}
+	}
+
+	if (!receivedDone) {
+		throw new Error(
+			'Generation was cut off before completing — the quiz may be too large, please try fewer questions',
+		)
 	}
 
 	return lastContent
