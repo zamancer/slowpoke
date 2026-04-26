@@ -12,9 +12,10 @@ export const useAllQuizzes = (): { quizzes: Quiz[]; isLoading: boolean } => {
 
 	const merged = useMemo(() => {
 		const dynamic = (convexQuizzes ?? []).map(mapConvexQuiz)
-		const convexIds = new Set(dynamic.map((q) => q.id))
+		const published = dynamic.filter((q) => q.status !== 'draft')
+		const convexIds = new Set(published.map((q) => q.id))
 		const filtered = staticQuizzes.filter((q) => !convexIds.has(q.id))
-		return [...filtered, ...dynamic]
+		return [...filtered, ...published]
 	}, [convexQuizzes])
 
 	return { quizzes: merged, isLoading: convexQuizzes === undefined }

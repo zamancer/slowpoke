@@ -16,6 +16,7 @@ import type * as lib_auth from "../lib/auth.js";
 import type * as lib_dateHelpers from "../lib/dateHelpers.js";
 import type * as quizAnswers from "../quizAnswers.js";
 import type * as quizContent from "../quizContent.js";
+import type * as quizGeneration from "../quizGeneration.js";
 import type * as quizSessions from "../quizSessions.js";
 import type * as users from "../users.js";
 
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   "lib/dateHelpers": typeof lib_dateHelpers;
   quizAnswers: typeof quizAnswers;
   quizContent: typeof quizContent;
+  quizGeneration: typeof quizGeneration;
   quizSessions: typeof quizSessions;
   users: typeof users;
 }>;

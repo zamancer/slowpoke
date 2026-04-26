@@ -92,11 +92,7 @@ export default defineSchema({
 
 	quizContent: defineTable({
 		contentId: v.string(),
-		type: v.union(
-			v.literal('pattern-selection'),
-			v.literal('anti-patterns'),
-			v.literal('big-o'),
-		),
+		type: v.string(),
 		category: v.string(),
 		subcategory: v.string(),
 		difficulty: v.union(
@@ -116,10 +112,15 @@ export default defineSchema({
 				mistakes: v.optional(v.string()),
 			}),
 		),
+		status: v.optional(
+			v.union(v.literal('draft'), v.literal('published')),
+		),
+		sourcePrompt: v.optional(v.string()),
 		createdBy: v.optional(v.id('users')),
 	})
 		.index('byContentId', ['contentId'])
-		.index('byCategory', ['category']),
+		.index('byCategory', ['category'])
+		.index('byStatus', ['status']),
 
 	flashcardContent: defineTable({
 		contentId: v.string(),

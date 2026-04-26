@@ -1,6 +1,8 @@
 export type Difficulty = 'easy' | 'medium' | 'hard'
 
-export type QuizType = 'pattern-selection' | 'anti-patterns' | 'big-o'
+export type QuizType = string
+
+export type QuizStatus = 'draft' | 'published'
 
 export type ContentSource = 'static' | 'convex'
 
@@ -23,6 +25,7 @@ export type Quiz = {
 	title: string
 	questions: QuizQuestion[]
 	source: ContentSource
+	status?: QuizStatus
 }
 
 export type FlashcardCard = {

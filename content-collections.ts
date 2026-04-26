@@ -5,7 +5,10 @@ import { parseCardSections, parseQuizQuestions } from './src/lib/content/parsers
 const DifficultySchema = z.enum(['easy', 'medium', 'hard'])
 const FlashcardDifficultySchema = DifficultySchema
 
-const QuizTypeSchema = z.enum(['pattern-selection', 'anti-patterns', 'big-o'])
+const QuizTypeSchema = z
+	.string()
+	.min(1)
+	.refine((s) => s.trim().length > 0, { message: 'Quiz type cannot be blank' })
 
 const getGroupTitle = (subcategory: string, id: string): string => {
 	const subcategoryTitle = subcategory
