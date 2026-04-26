@@ -1,6 +1,5 @@
-import * as Sentry from '@sentry/tanstackstart-react'
 import { createClerkClient } from '@clerk/backend'
-import { chat } from '@tanstack/ai'
+import { chat, toServerSentEventsResponse } from '@tanstack/ai'
 import { anthropicText } from '@tanstack/ai-anthropic'
 import { createFileRoute } from '@tanstack/react-router'
 import { z } from 'zod'
@@ -28,36 +27,6 @@ const InputSchema = z.object({
 	quizType: z.string().optional(),
 })
 
-const OutputSchema = z.object({
-	title: z.string().min(1),
-	type: z.string().min(1),
-	category: z.string().min(1),
-	subcategory: z.string().min(1),
-	difficulty: z.enum(['easy', 'medium', 'hard']),
-	tags: z.array(z.string()),
-	questions: z
-		.array(
-			z
-				.object({
-					question: z.string().min(1),
-					options: z
-						.array(z.object({ label: z.string().min(1), text: z.string().min(1) }))
-						.length(4)
-						.refine(
-							(opts) => new Set(opts.map((o) => o.label)).size === 4,
-							{ message: 'Option labels must be unique' },
-						),
-					answer: z.string().min(1),
-					explanation: z.string().min(1),
-					mistakes: z.string().optional(),
-				})
-				.refine((q) => q.options.some((o) => o.label === q.answer), {
-					message: 'Answer must match one of the option labels',
-				}),
-		)
-		.min(1),
-})
-
 const jsonError = (message: string, status: number) =>
 	new Response(JSON.stringify({ error: message }), {
 		status,
@@ -68,47 +37,32 @@ export const Route = createFileRoute('/api/ai/quiz-generate')({
 	server: {
 		handlers: {
 			POST: async ({ request }) => {
-				return await Sentry.startSpan({ name: 'Quiz generation' }, async () => {
-					const { isAuthenticated } = await clerk.authenticateRequest(request)
-					if (!isAuthenticated) return jsonError('Unauthorized', 401)
+				const { isAuthenticated } = await clerk.authenticateRequest(request)
+				if (!isAuthenticated) return jsonError('Unauthorized', 401)
 
-					let body: unknown
-					try {
-						body = await request.json()
-					} catch {
-						return jsonError('Malformed JSON body', 400)
-					}
+				let body: unknown
+				try {
+					body = await request.json()
+				} catch {
+					return jsonError('Malformed JSON body', 400)
+				}
 
-					const parsedInput = InputSchema.safeParse(body)
-					if (!parsedInput.success) {
-						return jsonError('Invalid quiz generation request', 400)
-					}
+				const parsedInput = InputSchema.safeParse(body)
+				if (!parsedInput.success) {
+					return jsonError('Invalid quiz generation request', 400)
+				}
 
-					const adapter = anthropicText(MODEL as 'claude-sonnet-4')
-					const prompt = buildQuizGenerationPrompt(parsedInput.data)
+				const prompt = buildQuizGenerationPrompt(parsedInput.data)
+				const adapter = anthropicText(MODEL as 'claude-sonnet-4')
 
-					let result: z.infer<typeof OutputSchema>
-					try {
-						result = await chat({
-							adapter,
-							messages: [{ role: 'user', content: prompt }],
-							systemPrompts: [QUIZ_GENERATION_SYSTEM_PROMPT],
-							maxTokens: MAX_TOKENS,
-							outputSchema: OutputSchema,
-						})
-					} catch {
-						return jsonError('Quiz generation failed', 500)
-					}
-
-					if (result.questions.length !== parsedInput.data.questionCount) {
-						return jsonError('Generated quiz has incorrect question count', 500)
-					}
-
-					return new Response(JSON.stringify(result), {
-						status: 200,
-						headers: { 'Content-Type': 'application/json' },
-					})
+				const stream = chat({
+					adapter,
+					messages: [{ role: 'user', content: prompt }],
+					systemPrompts: [QUIZ_GENERATION_SYSTEM_PROMPT],
+					maxTokens: MAX_TOKENS,
 				})
+
+				return toServerSentEventsResponse(stream)
 			},
 		},
 	},

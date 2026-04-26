@@ -33,6 +33,50 @@ const slugify = (value: string) =>
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/(^-|-$)/g, '')
 
+const accumulateSseText = async (response: Response): Promise<string> => {
+	const reader = response.body!.getReader()
+	const decoder = new TextDecoder()
+	let buffer = ''
+	let lastContent = ''
+
+	while (true) {
+		const { done, value } = await reader.read()
+		if (done) break
+
+		buffer += decoder.decode(value, { stream: true })
+		const parts = buffer.split('\n\n')
+		buffer = parts.pop() ?? ''
+
+		for (const part of parts) {
+			for (const line of part.split('\n')) {
+				if (!line.startsWith('data: ')) continue
+				const data = line.slice(6)
+				if (data === '[DONE]') return lastContent
+				try {
+					const event = JSON.parse(data) as {
+						type?: string
+						content?: string
+					}
+					if (event.type === 'content' && typeof event.content === 'string') {
+						lastContent = event.content
+					}
+				} catch {
+					// skip malformed events
+				}
+			}
+		}
+	}
+
+	return lastContent
+}
+
+const extractJson = (text: string): string => {
+	const start = text.indexOf('{')
+	const end = text.lastIndexOf('}')
+	if (start === -1 || end === -1 || end < start) return text
+	return text.slice(start, end + 1)
+}
+
 function QuizGeneratorPage() {
 	return (
 		<div className="container mx-auto py-8 px-4 max-w-2xl">
@@ -130,7 +174,28 @@ function QuizGenerateForm() {
 				)
 			}
 
-			const quiz = await res.json()
+			const rawText = await accumulateSseText(res)
+			const cleanedJson = extractJson(rawText.trim())
+			let quiz: {
+				type: string
+				subcategory: string
+				category: string
+				difficulty: 'easy' | 'medium' | 'hard'
+				tags: string[]
+				title: string
+				questions: Array<{
+					question: string
+					options: { label: string; text: string }[]
+					answer: string
+					explanation: string
+					mistakes?: string
+				}>
+			}
+			try {
+				quiz = JSON.parse(cleanedJson)
+			} catch {
+				throw new Error('Failed to parse generated quiz — please try again')
+			}
 			const contentId = `${slugify(quiz.type)}-${slugify(quiz.subcategory)}-${Date.now()}`
 
 			await createQuiz({
