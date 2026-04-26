@@ -1,6 +1,6 @@
 import { SignedIn, SignedOut, SignInButton } from '@clerk/clerk-react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useMutation } from 'convex/react'
+import { useAction } from 'convex/react'
 import { ChevronDown, ChevronUp, Sparkles } from 'lucide-react'
 import { useId, useState } from 'react'
 import { Button } from '@/components/ui/button'
@@ -32,66 +32,6 @@ const slugify = (value: string) =>
 		.trim()
 		.replace(/[^a-z0-9]+/g, '-')
 		.replace(/(^-|-$)/g, '')
-
-const accumulateSseText = async (response: Response): Promise<string> => {
-	const reader = response.body!.getReader()
-	const decoder = new TextDecoder()
-	let buffer = ''
-	let lastContent = ''
-	let receivedDone = false
-
-	while (true) {
-		const { done, value } = await reader.read()
-		if (done) break
-
-		buffer += decoder.decode(value, { stream: true })
-		const parts = buffer.split('\n\n')
-		buffer = parts.pop() ?? ''
-
-		for (const part of parts) {
-			for (const line of part.split('\n')) {
-				if (!line.startsWith('data: ')) continue
-				const data = line.slice(6)
-				if (data === '[DONE]') {
-					receivedDone = true
-					return lastContent
-				}
-				try {
-					const event = JSON.parse(data) as {
-						type?: string
-						content?: string
-						error?: { message?: string }
-					}
-					if (event.type === 'content' && typeof event.content === 'string') {
-						lastContent = event.content
-					} else if (event.type === 'error') {
-						throw new Error(
-							event.error?.message ?? 'Generation failed — please try again',
-						)
-					}
-				} catch (e) {
-					if (e instanceof SyntaxError) continue
-					throw e
-				}
-			}
-		}
-	}
-
-	if (!receivedDone) {
-		throw new Error(
-			'Generation was cut off before completing — the quiz may be too large, please try fewer questions',
-		)
-	}
-
-	return lastContent
-}
-
-const extractJson = (text: string): string => {
-	const start = text.indexOf('{')
-	const end = text.lastIndexOf('}')
-	if (start === -1 || end === -1 || end < start) return text
-	return text.slice(start, end + 1)
-}
 
 function QuizGeneratorPage() {
 	return (
@@ -131,7 +71,7 @@ function QuizGenerateForm() {
 	const [isExtracting, setIsExtracting] = useState(false)
 	const [error, setError] = useState<string | null>(null)
 
-	const createQuiz = useMutation(api.quizContent.create)
+	const generateQuiz = useAction(api.quizGeneration.generate)
 
 	const handleSourceFile = async (file: File) => {
 		setIsExtracting(true)
@@ -166,65 +106,15 @@ function QuizGenerateForm() {
 				.map((t) => t.trim())
 				.filter(Boolean)
 
-			const body: Record<string, unknown> = {
+			const contentId = await generateQuiz({
 				prompt: prompt.trim(),
 				questionCount,
-			}
-			if (sourceText.trim()) body.sourceText = sourceText.trim()
-			if (difficulty) body.difficulty = difficulty
-			if (category.trim()) body.category = slugify(category)
-			if (subcategory.trim()) body.subcategory = slugify(subcategory)
-			if (parsedTags.length > 0) body.tags = parsedTags.map(slugify)
-			if (quizType.trim()) body.quizType = slugify(quizType)
-
-			const res = await fetch('/api/ai/quiz-generate', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(body),
-			})
-
-			if (!res.ok) {
-				const data = await res.json().catch(() => ({}))
-				throw new Error(
-					(data as { error?: string }).error ?? 'Generation failed',
-				)
-			}
-
-			const rawText = await accumulateSseText(res)
-			const cleanedJson = extractJson(rawText.trim())
-			let quiz: {
-				type: string
-				subcategory: string
-				category: string
-				difficulty: 'easy' | 'medium' | 'hard'
-				tags: string[]
-				title: string
-				questions: Array<{
-					question: string
-					options: { label: string; text: string }[]
-					answer: string
-					explanation: string
-					mistakes?: string
-				}>
-			}
-			try {
-				quiz = JSON.parse(cleanedJson)
-			} catch {
-				throw new Error('Failed to parse generated quiz — please try again')
-			}
-			const contentId = `${slugify(quiz.type)}-${slugify(quiz.subcategory)}-${Date.now()}`
-
-			await createQuiz({
-				contentId,
-				type: quiz.type,
-				category: quiz.category,
-				subcategory: quiz.subcategory,
-				difficulty: quiz.difficulty,
-				tags: quiz.tags,
-				version: '1.0.0',
-				title: quiz.title,
-				questions: quiz.questions,
-				sourcePrompt: prompt.trim(),
+				...(sourceText.trim() ? { sourceText: sourceText.trim() } : {}),
+				...(difficulty ? { difficulty } : {}),
+				...(category.trim() ? { category: slugify(category) } : {}),
+				...(subcategory.trim() ? { subcategory: slugify(subcategory) } : {}),
+				...(parsedTags.length > 0 ? { tags: parsedTags.map(slugify) } : {}),
+				...(quizType.trim() ? { quizType: slugify(quizType) } : {}),
 			})
 
 			navigate({
