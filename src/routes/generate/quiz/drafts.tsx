@@ -66,7 +66,9 @@ function DraftsList() {
 						No drafts yet. Generate a quiz to get started.
 					</p>
 					<Button asChild>
-						<Link to="/generate/quiz" search={{ prompt: '' }}>Generate Quiz</Link>
+						<Link to="/generate/quiz" search={{ prompt: '' }}>
+							Generate Quiz
+						</Link>
 					</Button>
 				</div>
 			)}

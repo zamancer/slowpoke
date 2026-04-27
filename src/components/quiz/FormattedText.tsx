@@ -3,19 +3,28 @@ type Segment =
 	| { type: 'code-block'; content: string; lang: string; id: number }
 	| { type: 'inline-code'; content: string; id: number }
 
-const parseInlineCode = (text: string, startId: number): [Segment[], number] => {
+const parseInlineCode = (
+	text: string,
+	startId: number,
+): [Segment[], number] => {
 	const result: Segment[] = []
 	let id = startId
 	const regex = /`([^`\n]+)`/g
 	let last = 0
 	let m = regex.exec(text)
 	while (m !== null) {
-		if (m.index > last) result.push({ type: 'text', content: text.slice(last, m.index), id: id++ })
+		if (m.index > last)
+			result.push({
+				type: 'text',
+				content: text.slice(last, m.index),
+				id: id++,
+			})
 		result.push({ type: 'inline-code', content: m[1], id: id++ })
 		last = m.index + m[0].length
 		m = regex.exec(text)
 	}
-	if (last < text.length) result.push({ type: 'text', content: text.slice(last), id: id++ })
+	if (last < text.length)
+		result.push({ type: 'text', content: text.slice(last), id: id++ })
 	return [result, id]
 }
 
@@ -31,7 +40,12 @@ const parseText = (text: string): Segment[] => {
 			result.push(...segs)
 			id = nextId
 		}
-		result.push({ type: 'code-block', content: m[2].trim(), lang: m[1] || '', id: id++ })
+		result.push({
+			type: 'code-block',
+			content: m[2].trim(),
+			lang: m[1] || '',
+			id: id++,
+		})
 		last = m.index + m[0].length
 		m = regex.exec(text)
 	}
@@ -63,7 +77,10 @@ interface FormattedTextProps {
 	variant?: 'question' | 'option'
 }
 
-export const FormattedText = ({ text, variant = 'question' }: FormattedTextProps) => {
+export const FormattedText = ({
+	text,
+	variant = 'question',
+}: FormattedTextProps) => {
 	const segments = parseText(text)
 
 	return (
@@ -71,7 +88,10 @@ export const FormattedText = ({ text, variant = 'question' }: FormattedTextProps
 			{segments.map((seg) => {
 				if (seg.type === 'code-block') {
 					return (
-						<div key={seg.id} className="my-3 rounded-lg overflow-hidden border border-zinc-700 dark:border-zinc-600">
+						<div
+							key={seg.id}
+							className="my-3 rounded-lg overflow-hidden border border-zinc-700 dark:border-zinc-600"
+						>
 							{seg.lang && (
 								<div className="px-3 py-1 bg-zinc-800 text-zinc-400 text-xs font-mono border-b border-zinc-700">
 									{seg.lang}
@@ -84,7 +104,13 @@ export const FormattedText = ({ text, variant = 'question' }: FormattedTextProps
 					)
 				}
 				if (seg.type === 'inline-code') {
-					return <InlineCode key={seg.id} content={seg.content} variant={variant ?? 'question'} />
+					return (
+						<InlineCode
+							key={seg.id}
+							content={seg.content}
+							variant={variant ?? 'question'}
+						/>
+					)
 				}
 				return <span key={seg.id}>{seg.content}</span>
 			})}
