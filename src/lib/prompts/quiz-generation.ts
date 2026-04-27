@@ -9,6 +9,17 @@ export type QuizGenerationInput = {
 	quizType?: string
 }
 
+export type QuizVariantInput = {
+	sourcePrompt: string
+	questionCount: number
+	existingQuestions: string[]
+	difficulty: 'easy' | 'medium' | 'hard'
+	category: string
+	subcategory: string
+	tags: string[]
+	quizType: string
+}
+
 export const QUIZ_GENERATION_SYSTEM_PROMPT = `You are an expert educator creating quiz content for a learning platform.
 
 You generate high-quality multiple-choice quizzes on any topic, from simple math to complex computer science.
@@ -25,8 +36,31 @@ Difficulty calibration:
 Every question must have exactly 4 options (A, B, C, D) with exactly one correct answer. Explanations should teach, not just state the answer. Mistakes should explain why each wrong option is appealing.
 `
 
-const escapeForSentinel = (text: string): string =>
-	text.replace(/<\//g, '<\\/')
+const escapeForSentinel = (text: string): string => text.replace(/<\//g, '<\\/')
+
+const JSON_SHAPE_SECTION = `Return JSON with this exact shape:
+{
+  "title": "descriptive quiz title",
+  "type": "quiz type slug (e.g. multiplication, sliding-window, vocabulary)",
+  "category": "broad category slug (e.g. math, algorithms, language)",
+  "subcategory": "specific subcategory slug (e.g. fractions, binary-search)",
+  "difficulty": "easy|medium|hard",
+  "tags": ["tag1", "tag2"],
+  "questions": [
+    {
+      "question": "question text",
+      "options": [
+        { "label": "A", "text": "option text" },
+        { "label": "B", "text": "option text" },
+        { "label": "C", "text": "option text" },
+        { "label": "D", "text": "option text" }
+      ],
+      "answer": "A",
+      "explanation": "why the correct answer is correct",
+      "mistakes": "why each wrong option is appealing"
+    }
+  ]
+}`
 
 export const buildQuizGenerationPrompt = (
 	input: QuizGenerationInput,
@@ -64,29 +98,34 @@ export const buildQuizGenerationPrompt = (
 		)
 	}
 
-	sections.push(`Return JSON with this exact shape:
-{
-  "title": "descriptive quiz title",
-  "type": "quiz type slug (e.g. multiplication, sliding-window, vocabulary)",
-  "category": "broad category slug (e.g. math, algorithms, language)",
-  "subcategory": "specific subcategory slug (e.g. fractions, binary-search)",
-  "difficulty": "easy|medium|hard",
-  "tags": ["tag1", "tag2"],
-  "questions": [
-    {
-      "question": "question text",
-      "options": [
-        { "label": "A", "text": "option text" },
-        { "label": "B", "text": "option text" },
-        { "label": "C", "text": "option text" },
-        { "label": "D", "text": "option text" }
-      ],
-      "answer": "A",
-      "explanation": "why the correct answer is correct",
-      "mistakes": "why each wrong option is appealing"
-    }
-  ]
-}`)
+	sections.push(JSON_SHAPE_SECTION)
+
+	return sections.join('\n\n')
+}
+
+export const buildVariantGenerationPrompt = (
+	input: QuizVariantInput,
+): string => {
+	const sections: string[] = [
+		`Generate a quiz variant based on the following original topic prompt:\n<prompt>\n${escapeForSentinel(input.sourcePrompt)}\n</prompt>`,
+		`Generate exactly ${input.questionCount} questions.`,
+		`Target difficulty: ${input.difficulty}`,
+		`Category: ${input.category}`,
+		`Subcategory: ${input.subcategory}`,
+		`Tags: [${input.tags.join(', ')}]`,
+		`Quiz type: ${input.quizType}`,
+	]
+
+	if (input.existingQuestions.length > 0) {
+		const numbered = input.existingQuestions
+			.map((q, i) => `${i + 1}. ${q}`)
+			.join('\n')
+		sections.push(
+			`IMPORTANT: Do NOT repeat or rephrase any of these existing questions. Generate completely different questions that cover other aspects of the topic:\n<existing_questions>\n${escapeForSentinel(numbered)}\n</existing_questions>`,
+		)
+	}
+
+	sections.push(JSON_SHAPE_SECTION)
 
 	return sections.join('\n\n')
 }

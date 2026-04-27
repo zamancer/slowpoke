@@ -236,7 +236,11 @@ function DraftPreview({ contentId }: { contentId: string }) {
 						</>
 					)}
 				</Button>
-				<Button variant="outline" onClick={handleRegenerate} disabled={isEditing}>
+				<Button
+					variant="outline"
+					onClick={handleRegenerate}
+					disabled={isEditing}
+				>
 					<RotateCcw size={16} className="mr-1" />
 					Regenerate
 				</Button>
