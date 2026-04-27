@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react'
 import { cn } from '@/lib/utils'
+import { FormattedText } from './FormattedText'
 
 interface Option {
 	label: string
@@ -95,7 +96,9 @@ export const QuizQuestion = ({
 						<span className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-sm font-medium shrink-0">
 							{questionNumber}
 						</span>
-						<p className="text-lg leading-relaxed pt-1">{question.question}</p>
+						<div className="text-lg leading-relaxed pt-1">
+							<FormattedText text={question.question} variant="question" />
+						</div>
 					</div>
 
 					<div className="flex flex-col gap-2 mt-2">
@@ -145,7 +148,9 @@ export const QuizQuestion = ({
 									>
 										{option.label}
 									</span>
-									<span className="pt-0.5">{option.text}</span>
+									<span className="pt-0.5">
+										<FormattedText text={option.text} variant="option" />
+									</span>
 								</button>
 							)
 						})}
